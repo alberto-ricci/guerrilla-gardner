@@ -8,25 +8,29 @@ export default function GameLayout({
 	playerScore,
 	megaCorpControl,
 	stealthLevel,
+	policeCount,
 	isFrozen,
 }) {
+	const handleCellClick = isFrozen ? () => {} : onCellClick;
+
 	return (
 		<div className="w-full flex flex-col items-center max-w-7xl mx-auto px-4 py-8">
-			{/* Header and Title */}
+			{/* Header Section */}
 			<div className="w-full flex flex-col items-center gap-8 mb-10">
 				<Header
 					playerScore={playerScore}
 					megaCorpControl={megaCorpControl}
 					stealthLevel={stealthLevel}
+					policeCount={policeCount}
 				/>
 				<Title />
 			</div>
 
-			{/* City Grid */}
+			{/* Grid Section */}
 			<div className="flex justify-center w-full">
 				<CityGrid
 					grid={grid}
-					onCellClick={isFrozen ? () => {} : onCellClick}
+					onCellClick={handleCellClick}
 				/>
 			</div>
 		</div>

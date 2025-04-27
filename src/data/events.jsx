@@ -1,8 +1,6 @@
-const events = [
-	// Bad Events
+const badEvents = [
 	{
 		title: "Police Patrol",
-		type: "bad",
 		message: "A patrol sees something suspicious. Your stealth drops!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -12,7 +10,6 @@ const events = [
 	},
 	{
 		title: "Corporate Drones",
-		type: "bad",
 		message: "Surveillance drones spot unusual activity. Stealth plummets!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -22,7 +19,6 @@ const events = [
 	},
 	{
 		title: "Corporate Crackdown",
-		type: "bad",
 		message: "MegaCorp launches a crackdown. Their control strengthens!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -32,7 +28,6 @@ const events = [
 	},
 	{
 		title: "Suspicious Activity Reported",
-		type: "bad",
 		message: "Someone reports suspicious gardening activity. Watch out!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -42,7 +37,6 @@ const events = [
 	},
 	{
 		title: "Saboteur",
-		type: "bad",
 		message: "A saboteur tips off the authorities. Your stealth crumbles!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -50,11 +44,20 @@ const events = [
 			stealthLevel: Math.max(stealthLevel - 25, 0),
 		}),
 	},
+	{
+		title: "Corporate Bribes",
+		message: "MegaCorp bribes locals to reveal your gardens!",
+		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
+			playerScore,
+			megaCorpControl: Math.min(megaCorpControl + 10, 100),
+			stealthLevel: Math.max(stealthLevel - 5, 0),
+		}),
+	},
+];
 
-	// Good Events
+const goodEvents = [
 	{
 		title: "Community Support",
-		type: "good",
 		message: "Locals love your garden! MegaCorp's control weakens!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -64,7 +67,6 @@ const events = [
 	},
 	{
 		title: "Underground Gardeners",
-		type: "good",
 		message: "An underground network helps you spread faster!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore: playerScore + 5,
@@ -74,7 +76,6 @@ const events = [
 	},
 	{
 		title: "Hidden Garden",
-		type: "good",
 		message:
 			"You find a perfect hidden spot. Your stealth recovers slightly!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
@@ -85,7 +86,6 @@ const events = [
 	},
 	{
 		title: "Eco-Market Boom",
-		type: "good",
 		message: "Eco-friendly gardens gain massive popularity!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore: playerScore + 10,
@@ -95,7 +95,6 @@ const events = [
 	},
 	{
 		title: "Garden Festival",
-		type: "good",
 		message: "A spontaneous festival boosts your cause!",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore: playerScore + 15,
@@ -103,11 +102,20 @@ const events = [
 			stealthLevel: Math.min(stealthLevel + 10, 100),
 		}),
 	},
+	{
+		title: "Friendly Insider",
+		message: "A city official turns a blind eye to your gardens!",
+		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
+			playerScore,
+			megaCorpControl: Math.max(megaCorpControl - 5, 0),
+			stealthLevel: Math.min(stealthLevel + 10, 100),
+		}),
+	},
+];
 
-	// Neutral Events
+const neutralEvents = [
 	{
 		title: "City Parade",
-		type: "neutral",
 		message: "A massive parade clogs the streets. Everyone is distracted.",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -117,7 +125,6 @@ const events = [
 	},
 	{
 		title: "Heavy Rainfall",
-		type: "neutral",
 		message: "Torrential rain keeps people indoors. It's oddly quiet.",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
@@ -127,7 +134,6 @@ const events = [
 	},
 	{
 		title: "Political Debate",
-		type: "neutral",
 		message:
 			"All eyes are glued to a heated political debate. No one notices you.",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
@@ -138,7 +144,6 @@ const events = [
 	},
 	{
 		title: "Power Outage",
-		type: "neutral",
 		message:
 			"A city-wide blackout happens. Everything feels tense but unclear.",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
@@ -147,6 +152,21 @@ const events = [
 			stealthLevel,
 		}),
 	},
+	{
+		title: "Maintenance Strike",
+		message: "City workers strike. Surveillance is temporarily lower.",
+		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
+			playerScore,
+			megaCorpControl,
+			stealthLevel,
+		}),
+	},
+];
+
+const events = [
+	...badEvents.map((event) => ({ ...event, type: "bad" })),
+	...goodEvents.map((event) => ({ ...event, type: "good" })),
+	...neutralEvents.map((event) => ({ ...event, type: "neutral" })),
 ];
 
 export default events;

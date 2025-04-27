@@ -19,41 +19,50 @@ export default function App() {
 		"Tip: Spread gardens wide to defeat MegaCorp faster! 🌍",
 	];
 
-	const handleStartGame = () => {
-		const newTip = tips[Math.floor(Math.random() * tips.length)];
-		setRandomTip(newTip);
+	const pickRandomTip = () => {
+		return tips[Math.floor(Math.random() * tips.length)];
+	};
 
+	const handleStartGame = () => {
+		setRandomTip(pickRandomTip());
 		setIsLoading(true);
+
 		setTimeout(() => {
 			setIsLoading(false);
 			setGameStarted(true);
-		}, 1000); // 1 second "fake" loading
+		}, 1000); // Simulate loading
 	};
 
 	const handleBackToMenu = () => {
 		setGameStarted(false);
 	};
 
-	return (
-		<div className="min-h-screen bg-green-100 flex flex-col items-center justify-center p-4">
-			{!gameStarted ? (
-				isLoading ? (
-					<FadeWrapper>
-						<LoadingScreen tip={randomTip} />
-					</FadeWrapper>
-				) : (
-					<FadeWrapper>
-						<MainMenu onStart={handleStartGame} />
-					</FadeWrapper>
-				)
+	const renderContent = () => {
+		if (!gameStarted) {
+			return isLoading ? (
+				<FadeWrapper>
+					<LoadingScreen tip={randomTip} />
+				</FadeWrapper>
 			) : (
 				<FadeWrapper>
-					<GameScreen
-						onRestartGame={handleBackToMenu}
-						onBackToMenu={handleBackToMenu}
-					/>
+					<MainMenu onStart={handleStartGame} />
 				</FadeWrapper>
-			)}
+			);
+		}
+
+		return (
+			<FadeWrapper>
+				<GameScreen
+					onRestartGame={handleBackToMenu}
+					onBackToMenu={handleBackToMenu}
+				/>
+			</FadeWrapper>
+		);
+	};
+
+	return (
+		<div className="min-h-screen bg-green-100 flex flex-col items-center justify-center p-4">
+			{renderContent()}
 		</div>
 	);
 }

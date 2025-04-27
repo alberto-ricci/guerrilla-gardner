@@ -4,26 +4,32 @@ import LoseScreen from "./LoseScreen";
 export default function GameStateManager({
 	isVictory,
 	isDefeat,
+	defeatCause,
 	onRestart,
 	onBackToMenu,
 }) {
-	if (isVictory) {
-		return (
-			<VictoryScreen
-				onRestart={onRestart}
-				onBackToMenu={onBackToMenu}
-			/>
-		);
-	}
+	const renderGameState = () => {
+		if (isVictory) {
+			return (
+				<VictoryScreen
+					onRestart={onRestart}
+					onBackToMenu={onBackToMenu}
+				/>
+			);
+		}
 
-	if (isDefeat) {
-		return (
-			<LoseScreen
-				onRestart={onRestart}
-				onBackToMenu={onBackToMenu}
-			/>
-		);
-	}
+		if (isDefeat) {
+			return (
+				<LoseScreen
+					cause={defeatCause}
+					onRestart={onRestart}
+					onBackToMenu={onBackToMenu}
+				/>
+			);
+		}
 
-	return null;
+		return null;
+	};
+
+	return renderGameState();
 }

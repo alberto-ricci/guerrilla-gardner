@@ -5,24 +5,25 @@ export default function StealthBar({ stealthLevel }) {
 		return "bg-red-500"; // Danger
 	};
 
+	const stealthTextStyle = "text-yellow-700 font-semibold text-xs sm:text-sm";
+	const barContainerStyle =
+		"w-full bg-gray-300 rounded-lg h-4 overflow-hidden";
 	const isCritical = stealthLevel <= 30;
+
+	const barStyle = `h-4 ${getStealthColor(stealthLevel)} ${
+		isCritical ? "animate-fast-pulse" : ""
+	} transition-all duration-500 ease-out`;
 
 	return (
 		<div className="w-full">
 			<div className="flex justify-between items-center mb-1">
-				<span className="text-yellow-700 font-semibold text-xs sm:text-sm">
-					🕵️‍♂️ Stealth
-				</span>
-				<span className="text-yellow-700 font-semibold text-xs sm:text-sm">
-					{stealthLevel}%
-				</span>
+				<span className={stealthTextStyle}>🕵️‍♂️ Stealth</span>
+				<span className={stealthTextStyle}>{stealthLevel}%</span>
 			</div>
 
-			<div className="w-full bg-gray-300 rounded-lg h-4 overflow-hidden">
+			<div className={barContainerStyle}>
 				<div
-					className={`h-4 ${getStealthColor(stealthLevel)} ${
-						isCritical ? "animate-fast-pulse" : ""
-					} transition-all duration-500 ease-out`}
+					className={barStyle}
 					style={{
 						width: `${stealthLevel}%`,
 						transitionProperty: "width, background-color",
