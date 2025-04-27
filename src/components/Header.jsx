@@ -1,37 +1,54 @@
-import StealthBar from "./StealthBar";
+import React from "react";
 
-export default function Header({
-	playerScore,
-	megaCorpControl,
-	stealthLevel,
-	policeCount,
-}) {
-	const stats = [
-		{ label: "🌱 Gardens", value: playerScore, color: "text-green-800" },
-		{
-			label: "🏢 MegaCorp Control",
-			value: `${megaCorpControl}%`,
-			color: "text-red-700",
-		},
-		{ label: "🚓 Police Cars", value: policeCount, color: "text-blue-700" },
-	];
+const Header = ({ gardensCount, policeCount, megaCorpControl }) => {
+	// Dynamically calculate the City Control Meter value from -1 to 1
+	const cityControlValue = (megaCorpControl - 50) / 50; // Normalize to -1, 0, 1 scale
+
+	// Style for the control meter
+	const controlBarStyle = {
+		width: "100%",
+		height: "30px",
+		background: "lightgray",
+		borderRadius: "20px",
+		overflow: "hidden",
+		position: "relative",
+	};
+	const activeBarStyle = {
+		position: "absolute",
+		top: 0,
+		left: `${(cityControlValue + 1) * 50}%`,
+		width: "100%",
+		height: "100%",
+		background:
+			cityControlValue < 0
+				? "green"
+				: cityControlValue > 0
+				? "red"
+				: "yellow",
+	};
 
 	return (
-		<div className="w-full max-w-3xl bg-white p-6 rounded-lg shadow-md mb-8 flex flex-col gap-6 animate-fade-in">
-			{/* Score Section */}
-			<div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-				{stats.map((stat, index) => (
-					<div
-						key={index}
-						className={`${stat.color} text-lg sm:text-xl font-extrabold`}
-					>
-						{stat.label}: {stat.value}
-					</div>
-				))}
+		<div className="w-full p-4 bg-green-200 text-black">
+			<div className="flex justify-between items-center">
+				<div className="text-xl font-bold">
+					🌱 Gardens: {gardensCount} | 🚓 Police: {policeCount}
+				</div>
+				<div className="text-xl font-bold">Guerrilla Gardener</div>
 			</div>
 
-			{/* Stealth Meter */}
-			<StealthBar stealthLevel={stealthLevel} />
+			{/* City Control Meter */}
+			<div className="mt-4">
+				<div style={controlBarStyle}>
+					<div style={activeBarStyle}></div>
+				</div>
+				<div className="flex justify-between mt-2">
+					<div>Guerrilla</div>
+					<div>Neutral</div>
+					<div>MegaCorp, Inc.</div>
+				</div>
+			</div>
 		</div>
 	);
-}
+};
+
+export default Header;

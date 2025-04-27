@@ -4,7 +4,11 @@ export default function MainMenu({ onStart }) {
 	const legendItems = [
 		{ icon: "⬜", label: "Empty Lot", description: "Safe to plant 🌱" },
 		{ icon: "🏢", label: "Building", description: "High risk 🚨" },
-		{ icon: "🪨", label: "Abandoned Lot", description: "Lower risk 🌿" },
+		{
+			icon: "🪨",
+			label: "Abandoned Lot",
+			description: "Who knows what you can find here ✨",
+		},
 		{ icon: "🌱", label: "Garden", description: "Your planted area 🌳" },
 		{
 			icon: "🚓",
