@@ -19,13 +19,20 @@ const GameLayout = ({
 	securityLevel,
 }) => {
 	return (
-		<div className="w-full max-w-7xl mx-auto p-4 flex flex-col gap-4">
+		<div className="w-full max-w-7xl mx-auto p-4 flex flex-col gap-6">
+			{/* Game Title */}
+			<h1 className="text-4xl font-bold text-center text-green-800 drop-shadow-sm">
+				Guerrilla Gardener 🌱
+			</h1>
+
+			{/* Header with City Statistics */}
 			<Header
 				gardensCount={playerScore}
 				policeCount={policeCount}
 				megaCorpControl={megaCorpControl}
 			/>
 
+			{/* Main Panels */}
 			<div className="flex gap-4 items-stretch">
 				<div className="w-1/4">
 					<GuerrillaPanel

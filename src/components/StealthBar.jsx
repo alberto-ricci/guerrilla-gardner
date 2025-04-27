@@ -5,7 +5,7 @@ export default function StealthBar({ stealthLevel }) {
 		return "bg-red-500"; // Danger
 	};
 
-	const stealthTextStyle = "text-yellow-700 font-semibold text-xs sm:text-sm";
+	const stealthTextStyle = "text-black font-semibold text-large";
 	const barContainerStyle =
 		"w-full bg-gray-300 rounded-lg h-4 overflow-hidden";
 	const isCritical = stealthLevel <= 30;

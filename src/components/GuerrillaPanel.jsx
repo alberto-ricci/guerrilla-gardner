@@ -13,14 +13,14 @@ const GuerrillaPanel = ({ stealthLevel, resources, momentum }) => {
 			</div>
 
 			<div>
-				<h3 className="text-lg font-semibold text-green-800">
+				<h3 className="text-lg font-semibold text-black">
 					🛠️ Resources
 				</h3>
-				<p className="text-green-700">{resources} Seeds/Tools</p>
+				<p className="text-black">{resources} Seeds/Tools</p>
 			</div>
 
 			<div>
-				<h3 className="text-lg font-semibold text-green-800">
+				<h3 className="text-lg font-semibold text-black">
 					⚡ Momentum
 				</h3>
 				<div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">

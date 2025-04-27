@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const quoteList = [
 	{
-		text: " [...] As long as hierarchy persists, as long as domination organises humanity around a system of elites, the project of dominating nature will continue to exist and inevitably lead our planet to ecological extinction",
+		text: " [...] As long as hierarchy persists, as long as domination organises humanity around a system of elites, the project of dominating nature will continue to exist and inevitably lead our planet to ecological extinction.",
 		author: "Murray Bookchin",
 	},
 	{
@@ -17,9 +17,9 @@ const quoteList = [
 
 const quoteStyles = {
 	container:
-		"mt-6 px-6 py-4 bg-green-50 rounded-lg shadow text-center max-w-xl",
-	text: "text-green-800 italic text-base sm:text-lg leading-relaxed mb-2",
-	author: "text-green-600 font-semibold text-sm sm:text-base",
+		"mt-8 px-8 py-6 bg-white rounded-xl  text-center w-full max-w-4xl",
+	text: "text-green-800 italic text-lg sm:text-xl leading-relaxed mb-4",
+	author: "text-green-700 font-semibold text-base sm:text-lg",
 };
 
 export default function QuoteBox() {
