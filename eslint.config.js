@@ -1,33 +1,26 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import js from "@eslint/js";
+import globals from "globals";
+import pluginReact from "eslint-plugin-react";
+import pluginImport from "eslint-plugin-import";
+import { defineConfig } from "eslint/config";
 
-export default [
-  { ignores: ['dist'] },
-  {
-    files: ['**/*.{js,jsx}'],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
-      },
-    },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
-    },
-  },
-]
+export default defineConfig([
+	{
+		files: ["**/*.{js,mjs,cjs,jsx}"],
+		plugins: {
+			js,
+			react: pluginReact,
+			import: pluginImport,
+		},
+		languageOptions: {
+			globals: globals.browser,
+		},
+		rules: {
+			...js.configs.recommended.rules,
+			...pluginReact.configs.recommended.rules,
+			...pluginImport.configs.recommended.rules,
+			"import/no-named-as-default": "error",
+			"import/no-named-as-default-member": "error",
+		},
+	},
+]);

@@ -1,12 +1,11 @@
 export default function CityGrid({ grid, onCellClick }) {
-	const DEBUG_ALWAYS_REVEAL_POLICE = true; // 👈 Add this for testing!
+	const DEBUG_ALWAYS_REVEAL_POLICE = true;
 
-	const getCellStyle = (type, revealed, justSpawned) => {
-		// 🔥 Override visibility if debugging
+	const getCellStyle = (terrain, unit, revealed, justSpawned) => {
 		const shouldReveal =
-			revealed || (DEBUG_ALWAYS_REVEAL_POLICE && type === "police");
+			revealed || (DEBUG_ALWAYS_REVEAL_POLICE && unit === "police");
 
-		if (type === "police") {
+		if (unit === "police") {
 			if (!shouldReveal && justSpawned)
 				return "bg-red-300 text-red-800 border-4 border-red-600 animate-shake";
 			if (!shouldReveal) return "bg-gray-100 text-gray-700";
@@ -20,14 +19,14 @@ export default function CityGrid({ grid, onCellClick }) {
 			garden: "bg-green-500 text-green-900",
 		};
 
-		return styles[type] || "bg-gray-200";
+		return styles[terrain] || "bg-gray-200";
 	};
 
-	const getCellEmoji = (type, revealed) => {
+	const getCellEmoji = (terrain, unit, revealed) => {
 		const shouldReveal =
-			revealed || (DEBUG_ALWAYS_REVEAL_POLICE && type === "police");
+			revealed || (DEBUG_ALWAYS_REVEAL_POLICE && unit === "police");
 
-		if (type === "police" && !shouldReveal) return "⬜";
+		if (unit === "police" && !shouldReveal) return "⬜";
 
 		const icons = {
 			empty: "⬜",
@@ -37,7 +36,7 @@ export default function CityGrid({ grid, onCellClick }) {
 			police: "🚓",
 		};
 
-		return icons[type] || "❓";
+		return unit ? icons[unit] : icons[terrain] || "❓";
 	};
 
 	return (
@@ -47,11 +46,11 @@ export default function CityGrid({ grid, onCellClick }) {
 					key={cell.id}
 					onClick={() => onCellClick(cell.id)}
 					className={`flex items-center justify-center aspect-square rounded border-2 
-			  ${getCellStyle(cell.type, cell.revealed, cell.justSpawned)}
+			  ${getCellStyle(cell.terrain, cell.unit, cell.revealed, cell.justSpawned)}
 			  text-xl sm:text-2xl font-bold transition-transform duration-300 ease-out
 			  cursor-pointer hover:scale-105 hover:brightness-110`}
 				>
-					{getCellEmoji(cell.type, cell.revealed)}
+					{getCellEmoji(cell.terrain, cell.unit, cell.revealed)}
 				</div>
 			))}
 		</div>

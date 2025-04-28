@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import GameLayout from "./GameLayout";
 import EventManager from "./EventManager";
 import GameStateManager from "./GameStateManager";
+import GameButtons from "./GameButtons";
 import useGridManager from "../hooks/useGridManager";
 import useEventManager from "../hooks/useEventManager";
+import useGameStats from "../hooks/useGameStats";
 
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
@@ -20,13 +22,16 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		policeCount,
 		setPoliceCount,
 		plantAtCell,
-		generateGrid,
+		generateFullGrid,
 	} = useGridManager(gridSize, stealthLevel, handleVictory, handleDefeat);
 
 	const { activeEvent, triggerRandomEvent, closeEvent } = useEventManager(
 		handleVictory,
 		handleDefeat
 	);
+
+	const { gardensCount, policeUnits, protests, megaCorpCells, rawSupport } =
+		useGameStats(grid);
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -55,16 +60,13 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		const plantedCell = grid.find((cell) => cell.id === id);
 		if (!plantedCell) return;
 
-		// Reveal cell first
 		setGrid((prevGrid) =>
 			prevGrid.map((cell) =>
 				cell.id === id ? { ...cell, revealed: true } : cell
 			)
 		);
 
-		// ✨ NEW LOGIC based on terrain type
-		if (plantedCell.type === "abandoned") {
-			// No police check, always trigger event
+		if (plantedCell.terrain === "abandoned") {
 			plantAtCell(id, {});
 			triggerRandomEvent(
 				{ playerScore, megaCorpControl, stealthLevel },
@@ -73,14 +75,12 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 					setMegaCorpControl(megaCorpControl);
 					setStealthLevel(stealthLevel);
 				},
-				plantedCell.type
+				plantedCell.terrain
 			);
-		} else if (plantedCell.type === "empty") {
-			// Normal behavior: police danger
+		} else if (plantedCell.terrain === "empty") {
 			plantAtCell(id, {
 				onPoliceCatch: () => handleDefeat("police"),
 			});
-			// No event triggered for empty lots
 		}
 
 		const newPlayerScore = playerScore + 1;
@@ -96,7 +96,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	}
 
 	function handleFullRestart() {
-		setGrid(generateGrid());
+		generateFullGrid();
 		setPlayerScore(0);
 		setMegaCorpControl(100);
 		setStealthLevel(100);
@@ -129,29 +129,25 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			<GameLayout
 				grid={grid}
 				onCellClick={handlePlant}
-				playerScore={playerScore}
-				megaCorpControl={megaCorpControl}
+				playerScore={gardensCount}
+				megaCorpControl={rawSupport}
 				stealthLevel={stealthLevel}
-				policeCount={policeCount}
+				policeCount={policeUnits}
 				isFrozen={isGameFrozen}
+				momentum={0}
+				resources={0}
+				surveillanceLevel={0}
+				droneActivity={0}
+				securityLevel={0}
+				protests={protests}
+				megaCorpCells={megaCorpCells}
 			/>
 
 			{!isVictory && !isDefeat && !activeEvent && (
-				<div className="flex flex-row flex-wrap justify-center gap-6 mt-8 w-full max-w-md">
-					<button
-						onClick={handleFullRestart}
-						className="w-40 h-14 bg-green-400 hover:bg-green-300 active:scale-95 hover:scale-105 text-white text-xl font-bold rounded-2xl shadow-lg transition-all duration-300"
-					>
-						🔄 Restart
-					</button>
-
-					<button
-						onClick={onBackToMenu}
-						className="w-40 h-14 bg-green-700 hover:bg-green-600 active:scale-95 hover:scale-105 text-white text-xl font-bold rounded-2xl shadow-lg transition-all duration-300"
-					>
-						🏠 Main Menu
-					</button>
-				</div>
+				<GameButtons
+					onRestart={handleFullRestart}
+					onBackToMenu={onBackToMenu}
+				/>
 			)}
 		</div>
 	);

@@ -5,6 +5,10 @@ module.exports = {
 			animation: {
 				"fade-in": "fadeIn 0.5s ease-out forwards",
 				shake: "shake 1s ease",
+				pulseSlow: "pulse 2s infinite",
+				glowGreen: "glowGreen 2s infinite",
+				glowRed: "glowRed 2s infinite",
+				bump: "bump 0.3s ease-in-out",
 			},
 			keyframes: {
 				fadeIn: {
@@ -25,6 +29,14 @@ module.exports = {
 				},
 				transitionProperty: {
 					size: "width, height",
+				},
+				glowGreen: {
+					"0%, 100%": { boxShadow: "0 0 10px #22c55e" }, // green-500
+					"50%": { boxShadow: "0 0 20px #22c55e" },
+				},
+				glowRed: {
+					"0%, 100%": { boxShadow: "0 0 10px #ef4444" }, // red-500
+					"50%": { boxShadow: "0 0 20px #ef4444" },
 				},
 			},
 		},
