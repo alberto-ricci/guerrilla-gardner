@@ -18,6 +18,14 @@ module.exports = {
 					"60%": { transform: "translateX(-5px)" },
 					"80%": { transform: "translateX(5px)" },
 				},
+				scale: {
+					98: "0.98",
+					102: "1.02",
+					105: "1.05",
+				},
+				transitionProperty: {
+					size: "width, height",
+				},
 			},
 		},
 	},

@@ -137,16 +137,17 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			/>
 
 			{!isVictory && !isDefeat && !activeEvent && (
-				<div className="flex flex-col sm:flex-row gap-4 mt-8">
+				<div className="flex flex-row flex-wrap justify-center gap-6 mt-8 w-full max-w-md">
 					<button
 						onClick={handleFullRestart}
-						className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-all duration-300"
+						className="w-40 h-14 bg-green-400 hover:bg-green-300 active:scale-95 hover:scale-105 text-white text-xl font-bold rounded-2xl shadow-lg transition-all duration-300"
 					>
 						🔄 Restart
 					</button>
+
 					<button
 						onClick={onBackToMenu}
-						className="px-6 py-3 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold transition-all duration-300"
+						className="w-40 h-14 bg-green-700 hover:bg-green-600 active:scale-95 hover:scale-105 text-white text-xl font-bold rounded-2xl shadow-lg transition-all duration-300"
 					>
 						🏠 Main Menu
 					</button>
