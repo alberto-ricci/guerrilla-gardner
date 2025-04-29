@@ -56,7 +56,10 @@ export function calculateCitySupport(grid) {
 	const megaCorpCells = countMegaCorpCells(grid);
 	const totalCells = grid.length;
 
-	if (totalCells === 0) return 0;
+	if (totalCells === 0) return 0; // If no grid exists at all
 
-	return (gardens - megaCorpCells) / totalCells;
+	// New logic:
+	if (gardens === 0) return 1; // If no gardens planted yet, full MegaCorp
+
+	return (megaCorpCells - gardens) / totalCells;
 }

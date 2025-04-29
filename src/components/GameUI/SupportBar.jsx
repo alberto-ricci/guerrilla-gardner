@@ -1,13 +1,8 @@
-// SupportBar.jsx
-// Visual bar showing support distribution between Guerrilla (green) and MegaCorp (red).
-
-import React from "react";
-
 export default function SupportBar({ supportValue }) {
-	const clampedSupport = Math.max(-1, Math.min(1, supportValue)); // Clamp support between -1 and 1
-	const centerIndex = 10; // Neutral center box index (out of 21)
+	const clampedSupport = Math.max(-1, Math.min(1, supportValue));
+	const totalBoxes = 21;
+	const centerIndex = Math.floor(totalBoxes / 2);
 
-	// Tailwind green shades for Guerrilla support (left)
 	const greenShades = [
 		"bg-green-100",
 		"bg-green-200",
@@ -20,7 +15,6 @@ export default function SupportBar({ supportValue }) {
 		"bg-green-900",
 	];
 
-	// Tailwind red shades for MegaCorp support (right)
 	const redShades = [
 		"bg-red-100",
 		"bg-red-200",
@@ -33,39 +27,51 @@ export default function SupportBar({ supportValue }) {
 		"bg-red-900",
 	];
 
-	const filledBoxes = Math.round(Math.abs(clampedSupport) * 10); // Up to 10 filled boxes on either side
+	const getShade = (index, type) => {
+		const distance = Math.abs(index - centerIndex) - 1; // -1 because center is neutral
+		const shadeIndex = Math.min(distance, greenShades.length - 1);
 
-	// Determine box color based on index position and support level
-	const getBoxColor = (index) => {
-		if (index === centerIndex) return "bg-yellow-400"; // Neutral center
-
-		if (clampedSupport < 0) {
-			// Guerrilla side (left fill)
-			if (index >= centerIndex - filledBoxes && index < centerIndex)
-				return greenShades[
-					Math.min(centerIndex - index - 1, greenShades.length - 1)
-				];
-		} else if (clampedSupport > 0) {
-			// MegaCorp side (right fill)
-			if (index > centerIndex && index <= centerIndex + filledBoxes)
-				return redShades[
-					Math.min(index - centerIndex - 1, redShades.length - 1)
-				];
-		}
-
-		return "bg-gray-300"; // Empty
+		if (type === "green") return greenShades[shadeIndex];
+		if (type === "red") return redShades[shadeIndex];
+		return "bg-gray-300";
 	};
+
+	const activeBoxes = Math.round(Math.abs(clampedSupport) * centerIndex);
 
 	return (
 		<div className="flex flex-row gap-1 w-full justify-center mb-2">
-			{Array.from({ length: 21 }, (_, index) => (
-				<div
-					key={index}
-					className={`w-7 h-6 rounded-sm border border-black transition-all duration-500 ${getBoxColor(
-						index
-					)}`}
-				/>
-			))}
+			{Array.from({ length: totalBoxes }, (_, index) => {
+				const isLeft = index < centerIndex;
+				const isRight = index > centerIndex;
+
+				const isActive =
+					(clampedSupport < 0 &&
+						isLeft &&
+						index >= centerIndex - activeBoxes) ||
+					(clampedSupport > 0 &&
+						isRight &&
+						index <= centerIndex + activeBoxes);
+
+				let color = "bg-gray-300"; // Default gray
+
+				if (isActive) {
+					if (clampedSupport < 0 && isLeft) {
+						color = getShade(index, "green");
+					}
+					if (clampedSupport > 0 && isRight) {
+						color = getShade(index, "red");
+					}
+				}
+
+				if (index === centerIndex) color = "bg-yellow-400";
+
+				return (
+					<div
+						key={index}
+						className={`w-6 h-6 rounded-sm border border-black transition-all duration-500 ${color}`}
+					/>
+				);
+			})}
 		</div>
 	);
 }

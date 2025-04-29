@@ -1,132 +1,76 @@
 // GameScreen.jsx
-// Main gameplay manager: handles game grid, player actions, events, victory, and defeat.
-
 import { useState, useEffect } from "react";
+import { GameLayout, GameButtons, GameStateManager } from "@components";
+import { useGridManager } from "@hooks";
 import {
-	GameLayout,
-	EventManager,
-	GameStateManager,
-	GameButtons,
-} from "@components"; // Unified imports
-import { useGridManager, useEventManager, useGameStats } from "@hooks"; // Using hooks alias
+	calculateCitySupport,
+	countGardens,
+	countMegaCorpCells,
+	countPoliceUnits,
+} from "@systems/GameScoreSystem";
 
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
 
-	// Core game state
-	const [playerScore, setPlayerScore] = useState(0);
-	const [megaCorpControl, setMegaCorpControl] = useState(100);
-	const [stealthLevel, setStealthLevel] = useState(100);
 	const [isVictory, setIsVictory] = useState(false);
 	const [isDefeat, setIsDefeat] = useState(false);
+	const [support, setSupport] = useState(1); // ⚡ Start with full MegaCorp support
 	const [defeatCause, setDefeatCause] = useState(null);
 
-	// Grid management (custom hook)
-	const {
-		grid,
-		setGrid,
-		policeCount,
-		setPoliceCount,
-		plantAtCell,
-		generateFullGrid,
-	} = useGridManager(gridSize, stealthLevel, handleVictory, handleDefeat);
-
-	// Event management (custom hook)
-	const { activeEvent, triggerRandomEvent, closeEvent } = useEventManager(
-		handleVictory,
-		handleDefeat
+	const { grid, plantAtCell, movePolice, generateFullGrid } = useGridManager(
+		gridSize,
+		100,
+		handleVictory
 	);
 
-	// Stats tracking (custom hook)
-	const { gardensCount, policeUnits, protests, megaCorpCells, rawSupport } =
-		useGameStats(grid);
-
-	// Cleanup "justSpawned" status after grid refresh
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setGrid((prevGrid) =>
-				prevGrid.map((cell) =>
-					cell.justSpawned ? { ...cell, justSpawned: false } : cell
-				)
-			);
-		}, 1000);
-
-		return () => clearTimeout(timer);
-	}, [grid]);
-
-	// Handle victory state
 	function handleVictory() {
 		setIsVictory(true);
 	}
 
-	// Handle defeat state and cause
 	function handleDefeat(cause) {
 		setIsDefeat(true);
 		setDefeatCause(cause);
 	}
 
-	// Handle planting at a grid cell
 	function handlePlant(id) {
-		if (isVictory || isDefeat || activeEvent) return;
+		if (isVictory || isDefeat) return;
 
-		const plantedCell = grid.find((cell) => cell.id === id);
-		if (!plantedCell) return;
+		const clickedCell = grid.find((cell) => cell.id === id);
+		if (!clickedCell) return;
 
-		setGrid((prevGrid) =>
-			prevGrid.map((cell) =>
-				cell.id === id ? { ...cell, revealed: true } : cell
-			)
-		);
-
-		if (plantedCell.terrain === "abandoned") {
-			// Abandoned lot planting (event possible)
-			plantAtCell(id, {});
-			triggerRandomEvent(
-				{ playerScore, megaCorpControl, stealthLevel },
-				({ playerScore, megaCorpControl, stealthLevel }) => {
-					setPlayerScore(playerScore);
-					setMegaCorpControl(megaCorpControl);
-					setStealthLevel(stealthLevel);
-				},
-				plantedCell.terrain
-			);
-		} else if (plantedCell.terrain === "empty") {
-			// Empty lot planting (police risk)
-			plantAtCell(id, {
-				onPoliceCatch: () => handleDefeat("police"),
-			});
+		if (clickedCell.unit === "police") {
+			// 💥 Player clicked a police = defeat
+			handleDefeat("police");
+			return;
 		}
 
-		const newPlayerScore = playerScore + 1;
-		const newMegaCorpControl = Math.max(megaCorpControl - 2, 0);
-		const newStealthLevel = Math.max(stealthLevel - 10, 0);
+		plantAtCell(id);
+		movePolice();
 
-		setPlayerScore(newPlayerScore);
-		setMegaCorpControl(newMegaCorpControl);
-		setStealthLevel(newStealthLevel);
-
-		if (newMegaCorpControl === 0) handleVictory();
-		if (newStealthLevel <= 0) handleDefeat("megacorp");
+		// Update support immediately after planting
+		const updatedSupport = calculateCitySupport(grid);
+		setSupport(updatedSupport);
 	}
 
-	// Handle full game restart
 	function handleFullRestart() {
-		generateFullGrid();
-		setPlayerScore(0);
-		setMegaCorpControl(100);
-		setStealthLevel(100);
-		setPoliceCount(1);
+		// Reset all game state
 		setIsVictory(false);
 		setIsDefeat(false);
 		setDefeatCause(null);
-		closeEvent();
+		generateFullGrid();
+		setSupport(1); // Reset to full MegaCorp control
 	}
 
-	const isGameFrozen = isVictory || isDefeat || activeEvent !== null;
+	// 🛠 Update support automatically if grid changes
+	useEffect(() => {
+		if (grid.length > 0) {
+			const updatedSupport = calculateCitySupport(grid);
+			setSupport(updatedSupport);
+		}
+	}, [grid]);
 
 	return (
 		<div className="w-full flex flex-col items-center">
-			{/* Endgame screen manager */}
 			<GameStateManager
 				isVictory={isVictory}
 				isDefeat={isDefeat}
@@ -135,38 +79,31 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 				onBackToMenu={onBackToMenu}
 			/>
 
-			{/* Active event modal */}
+			{/* Render gameplay only if not ended */}
 			{!isVictory && !isDefeat && (
-				<EventManager
-					activeEvent={activeEvent}
-					onClose={closeEvent}
-				/>
-			)}
+				<>
+					<GameLayout
+						grid={grid}
+						onCellClick={handlePlant}
+						playerScore={countGardens(grid)}
+						megaCorpControl={support}
+						stealthLevel={100} // constant for now
+						policeCount={countPoliceUnits(grid)}
+						isFrozen={isVictory || isDefeat}
+						momentum={0}
+						resources={0}
+						surveillanceLevel={0}
+						droneActivity={0}
+						securityLevel={0}
+						protests={0}
+						megaCorpCells={countMegaCorpCells(grid)}
+					/>
 
-			{/* Main gameplay layout */}
-			<GameLayout
-				grid={grid}
-				onCellClick={handlePlant}
-				playerScore={gardensCount}
-				megaCorpControl={rawSupport}
-				stealthLevel={stealthLevel}
-				policeCount={policeUnits}
-				isFrozen={isGameFrozen}
-				momentum={0} // (Momentum system placeholder)
-				resources={0} // (Resource system placeholder)
-				surveillanceLevel={0} // (Placeholder for future expansion)
-				droneActivity={0} // (Placeholder for future expansion)
-				securityLevel={0} // (Placeholder for future expansion)
-				protests={protests}
-				megaCorpCells={megaCorpCells}
-			/>
-
-			{/* Action buttons (only when game is active) */}
-			{!isVictory && !isDefeat && !activeEvent && (
-				<GameButtons
-					onRestart={handleFullRestart}
-					onBackToMenu={onBackToMenu}
-				/>
+					<GameButtons
+						onRestart={handleFullRestart}
+						onBackToMenu={onBackToMenu}
+					/>
+				</>
 			)}
 		</div>
 	);

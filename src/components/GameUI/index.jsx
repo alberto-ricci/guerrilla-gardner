@@ -8,3 +8,4 @@ export { default as StealthBar } from "./StealthBar";
 export { default as SupportBar } from "./SupportBar";
 export { default as SupportLabels } from "./SupportLabels";
 export { default as Title } from "./Title";
+export { default as SupportStatus } from "./SupportStatus";
