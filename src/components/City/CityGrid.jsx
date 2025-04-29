@@ -49,7 +49,7 @@ export default function CityGrid({ grid, onCellClick }) {
 			{grid.map((cell) => (
 				<div
 					key={cell.id}
-					onClick={() => onCellClick(cell.id)}
+					onClick={() => onCellClick(cell)}
 					className={`flex items-center justify-center aspect-square rounded border-2 
 			  ${getCellStyle(cell.terrain, cell.unit, cell.revealed, cell.justSpawned)}
 			  text-xl sm:text-2xl font-bold transition-transform duration-300 ease-out

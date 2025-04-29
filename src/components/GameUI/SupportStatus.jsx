@@ -1,5 +1,3 @@
-// src/components/GameUI/SupportStatus.jsx
-
 export default function SupportStatus({ supportValue }) {
 	let label = "";
 	let emoji = "";

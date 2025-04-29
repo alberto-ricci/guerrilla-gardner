@@ -1,12 +1,7 @@
 // VictoryScreen.jsx
-// Displays a victory screen when the player successfully defeats MegaCorp.
+// Displays a victory screen when the player successfully wins against MegaCorp.
 
-export default function VictoryScreen({ onRestart, onBackToMenu }) {
-	// Victory title and description
-	const titleText = "🌱 You Liberated the City! 🌱";
-	const descriptionText =
-		"MegaCorp, Inc has fallen thanks to your gardens of hope!";
-
+export default function VictoryScreen({ reason, onRestart, onBackToMenu }) {
 	// TailwindCSS button styles
 	const buttonStyles = {
 		restart:
@@ -18,12 +13,12 @@ export default function VictoryScreen({ onRestart, onBackToMenu }) {
 		<div className="fixed inset-0 bg-green-900 bg-opacity-90 flex flex-col items-center justify-center text-center p-6 z-50">
 			{/* Victory Title */}
 			<h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 drop-shadow-md">
-				{titleText}
+				🌱 Victory! 🌱
 			</h2>
 
-			{/* Victory Description */}
+			{/* Victory Reason (dynamic) */}
 			<p className="text-lg sm:text-xl text-green-100 mb-10 max-w-xl leading-relaxed">
-				{descriptionText}
+				{reason || "You liberated the city from MegaCorp!"}
 			</p>
 
 			{/* Action Buttons */}

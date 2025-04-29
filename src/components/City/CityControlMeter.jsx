@@ -16,10 +16,8 @@ export default function CityControlMeter({ supportValue = 0 }) {
 
 	return (
 		<div className="flex flex-col items-center w-full mb-6">
-			{/* City Support Bar */}
+			{/* City Support Mood Bar */}
 			<SupportBar supportValue={clampedSupport} />
-
-			{/* Optional bump effect element */}
 		</div>
 	);
 }

@@ -1,4 +1,4 @@
-import { CityControlMeter, SupportStatus } from "@components"; // Import necessary components
+import { CityControlMeter, SupportStatus, SupportLabels } from "@components";
 
 export default function Header({
 	gardensCount,
@@ -10,9 +10,19 @@ export default function Header({
 	return (
 		<div className="w-full p-6 bg-green-200 text-black rounded-lg shadow-md">
 			{/* Dynamic City Status */}
-			<SupportStatus supportValue={supportValue} />
+			<div className="mb-4">
+				<SupportStatus supportValue={supportValue} />
+			</div>
+
 			{/* City Support Mood Bar */}
-			<CityControlMeter supportValue={supportValue} />
+			<div className="mb-4">
+				<CityControlMeter supportValue={supportValue} />
+			</div>
+
+			{/* Support Labels */}
+			<div className="mb-4">
+				<SupportLabels />
+			</div>
 
 			{/* 📊 Key Game Stats */}
 			<div className="flex justify-center flex-wrap gap-6 text-lg sm:text-xl font-semibold mt-6 text-green-900">

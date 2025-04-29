@@ -1,20 +1,19 @@
 // GameStateManager.jsx
-// Manages the endgame state, displaying either the Victory or Defeat screen.
-
 import { VictoryScreen, LoseScreen } from "@components";
 
 export default function GameStateManager({
 	isVictory,
 	isDefeat,
 	defeatCause,
+	victoryReason,
 	onRestart,
 	onBackToMenu,
 }) {
-	// Decides which endgame screen to render
 	const renderGameState = () => {
 		if (isVictory) {
 			return (
 				<VictoryScreen
+					reason={victoryReason}
 					onRestart={onRestart}
 					onBackToMenu={onBackToMenu}
 				/>
@@ -31,7 +30,7 @@ export default function GameStateManager({
 			);
 		}
 
-		return null; // No end state to display
+		return null;
 	};
 
 	return renderGameState();

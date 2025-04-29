@@ -39,7 +39,7 @@ export default function SupportBar({ supportValue }) {
 	const activeBoxes = Math.round(Math.abs(clampedSupport) * centerIndex);
 
 	return (
-		<div className="flex flex-row gap-1 w-full justify-center mb-2">
+		<div className="flex flex-row gap-1 w-full justify-center mb-4">
 			{Array.from({ length: totalBoxes }, (_, index) => {
 				const isLeft = index < centerIndex;
 				const isRight = index > centerIndex;

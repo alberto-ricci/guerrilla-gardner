@@ -9,13 +9,19 @@ import {
 	countPoliceUnits,
 } from "@systems/GameScoreSystem";
 
+import { checkVictory } from "@systems/WinCondition";
+import { checkDefeat } from "@systems/LoseCondition";
+
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
 
 	const [isVictory, setIsVictory] = useState(false);
 	const [isDefeat, setIsDefeat] = useState(false);
-	const [support, setSupport] = useState(1); // ⚡ Start with full MegaCorp support
+	const [support, setSupport] = useState(1);
 	const [defeatCause, setDefeatCause] = useState(null);
+	const [victoryReason, setVictoryReason] = useState(null);
+	const [hasPlayerActed, setHasPlayerActed] = useState(false);
+	const [lastClickedCell, setLastClickedCell] = useState(null); // ✅ NEW
 
 	const { grid, plantAtCell, movePolice, generateFullGrid } = useGridManager(
 		gridSize,
@@ -23,51 +29,91 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		handleVictory
 	);
 
-	function handleVictory() {
+	function handleVictory(reason = "Victory!") {
 		setIsVictory(true);
+		setVictoryReason(reason);
 	}
 
-	function handleDefeat(cause) {
+	function handleDefeat(cause = "Defeat...") {
 		setIsDefeat(true);
 		setDefeatCause(cause);
 	}
 
-	function handlePlant(id) {
+	function handlePlant(clickedCell) {
 		if (isVictory || isDefeat) return;
 
-		const clickedCell = grid.find((cell) => cell.id === id);
 		if (!clickedCell) return;
 
-		if (clickedCell.unit === "police") {
-			// 💥 Player clicked a police = defeat
-			handleDefeat("police");
+		// Update the last clicked cell
+		setLastClickedCell(clickedCell);
+
+		// Create a simulated gameState for checkDefeat
+		const simulatedGameState = {
+			playerScore: countGardens(grid),
+			megaCorpControl: countMegaCorpCells(grid),
+			supportValue: support,
+			stealthLevel: 100,
+			protests: 0,
+			lastClickedCell: clickedCell, // ✅ Include for defeat checking
+		};
+
+		// First, check if clicking this cell caused a defeat (police, etc.)
+		const defeat = checkDefeat(simulatedGameState);
+		if (defeat.defeat) {
+			handleDefeat(defeat.reason);
 			return;
 		}
 
-		plantAtCell(id);
+		// Otherwise, proceed normally
+		plantAtCell(clickedCell.id);
 		movePolice();
+		setHasPlayerActed(true);
+	}
 
-		// Update support immediately after planting
-		const updatedSupport = calculateCitySupport(grid);
-		setSupport(updatedSupport);
+	function evaluateGameState(currentSupport) {
+		const gameState = {
+			playerScore: countGardens(grid),
+			megaCorpControl: countMegaCorpCells(grid),
+			supportValue: currentSupport,
+			stealthLevel: 100,
+			protests: 0,
+		};
+
+		const victory = checkVictory(gameState);
+		if (victory.victory) {
+			handleVictory(victory.reason);
+			return;
+		}
+
+		const defeat = checkDefeat({
+			...gameState,
+			lastClickedCell,
+		});
+		if (defeat.defeat) {
+			handleDefeat(defeat.reason);
+			return;
+		}
 	}
 
 	function handleFullRestart() {
-		// Reset all game state
 		setIsVictory(false);
 		setIsDefeat(false);
+		setVictoryReason(null);
 		setDefeatCause(null);
+		setHasPlayerActed(false);
+		setLastClickedCell(null);
 		generateFullGrid();
-		setSupport(1); // Reset to full MegaCorp control
+		setSupport(1);
 	}
 
-	// 🛠 Update support automatically if grid changes
 	useEffect(() => {
-		if (grid.length > 0) {
+		if (grid.length > 0 && hasPlayerActed) {
 			const updatedSupport = calculateCitySupport(grid);
 			setSupport(updatedSupport);
+
+			evaluateGameState(updatedSupport);
 		}
-	}, [grid]);
+	}, [grid, hasPlayerActed]);
 
 	return (
 		<div className="w-full flex flex-col items-center">
@@ -75,19 +121,19 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 				isVictory={isVictory}
 				isDefeat={isDefeat}
 				defeatCause={defeatCause}
+				victoryReason={victoryReason}
 				onRestart={handleFullRestart}
 				onBackToMenu={onBackToMenu}
 			/>
 
-			{/* Render gameplay only if not ended */}
 			{!isVictory && !isDefeat && (
 				<>
 					<GameLayout
 						grid={grid}
-						onCellClick={handlePlant}
+						onCellClick={handlePlant} // ✅ Now expects full cell
 						playerScore={countGardens(grid)}
 						megaCorpControl={support}
-						stealthLevel={100} // constant for now
+						stealthLevel={100}
 						policeCount={countPoliceUnits(grid)}
 						isFrozen={isVictory || isDefeat}
 						momentum={0}

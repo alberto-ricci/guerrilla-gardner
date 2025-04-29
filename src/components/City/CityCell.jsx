@@ -19,7 +19,7 @@ export default function CityCell({ cell, onClick }) {
 
 	return (
 		<button
-			onClick={() => onClick(cell.id)}
+			onClick={() => onClick(cell)}
 			disabled={cell.terrain === "garden"}
 			className={`aspect-square flex items-center justify-center rounded-lg font-bold
 		  text-xl sm:text-2xl transition-all duration-300 ease-out
