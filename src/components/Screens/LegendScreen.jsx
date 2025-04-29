@@ -13,7 +13,7 @@ export default function LegendScreen({ onStart, onBack }) {
 		},
 		{
 			icon: "🏢",
-			label: "Building",
+			label: "MegaCorp's buildings",
 			description: "Crowded and risky — tread carefully! 🚨",
 		},
 		{

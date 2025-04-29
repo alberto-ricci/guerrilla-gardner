@@ -28,7 +28,7 @@ export default function WelcomeScreen({ onNext }) {
 							Plant Rebellion, Grow Resistance 🌿
 						</span>
 						The city is a prison of steel and surveillance —
-						MegaCorp Inc. owns it all. But you? You're a shadow, a
+						MegaCorp, Inc. owns it all. But you? You're a shadow, a
 						saboteur, turning sterile streets into battlegrounds of
 						life and defiance.
 						<br />

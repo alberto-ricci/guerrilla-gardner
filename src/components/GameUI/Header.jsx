@@ -6,12 +6,16 @@ export default function Header({
 	megaCorpCells,
 	protests,
 	supportValue,
+	supportChange, // ✅ NEW
 }) {
 	return (
 		<div className="w-full p-6 bg-green-200 text-black rounded-lg shadow-md">
 			{/* Dynamic City Status */}
 			<div className="mb-4">
-				<SupportStatus supportValue={supportValue} />
+				<SupportStatus
+					supportValue={supportValue}
+					supportChange={supportChange} // ✅ Pass supportChange to SupportStatus
+				/>
 			</div>
 
 			{/* City Support Mood Bar */}
@@ -43,7 +47,7 @@ export default function Header({
 
 				<div className="flex flex-col items-center">
 					<span className="text-3xl mb-1">🏢</span>
-					<span>MegaCorp Cells: {megaCorpCells}</span>
+					<span>MegaCorp, Inc Cells: {megaCorpCells}</span>
 				</div>
 			</div>
 		</div>

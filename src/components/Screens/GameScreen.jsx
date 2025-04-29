@@ -1,6 +1,10 @@
-// GameScreen.jsx
-import { useState, useEffect } from "react";
-import { GameLayout, GameButtons, GameStateManager } from "@components";
+import { useState, useEffect, useRef } from "react";
+import {
+	GameLayout,
+	GameButtons,
+	GameStateManager,
+	EventManager,
+} from "@components";
 import { useGridManager } from "@hooks";
 import {
 	calculateCitySupport,
@@ -8,9 +12,10 @@ import {
 	countMegaCorpCells,
 	countPoliceUnits,
 } from "@systems/GameScoreSystem";
-
 import { checkVictory } from "@systems/WinCondition";
 import { checkDefeat } from "@systems/LoseCondition";
+import { triggerRandomEvent } from "@systems/EventSystem";
+import { getPoliceAlertLevel, isPoliceCaught } from "@systems/PoliceSystem"; // ✅ Add this import!
 
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
@@ -18,10 +23,14 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const [isVictory, setIsVictory] = useState(false);
 	const [isDefeat, setIsDefeat] = useState(false);
 	const [support, setSupport] = useState(1);
+	const [previousSupport, setPreviousSupport] = useState(1);
 	const [defeatCause, setDefeatCause] = useState(null);
 	const [victoryReason, setVictoryReason] = useState(null);
 	const [hasPlayerActed, setHasPlayerActed] = useState(false);
-	const [lastClickedCell, setLastClickedCell] = useState(null); // ✅ NEW
+	const [lastClickedCell, setLastClickedCell] = useState(null);
+	const [activeEvent, setActiveEvent] = useState(null);
+
+	const previousSupportRef = useRef(support);
 
 	const { grid, plantAtCell, movePolice, generateFullGrid } = useGridManager(
 		gridSize,
@@ -40,34 +49,63 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	}
 
 	function handlePlant(clickedCell) {
-		if (isVictory || isDefeat) return;
+		if (isVictory || isDefeat || !clickedCell) return;
 
-		if (!clickedCell) return;
-
-		// Update the last clicked cell
 		setLastClickedCell(clickedCell);
 
-		// Create a simulated gameState for checkDefeat
 		const simulatedGameState = {
 			playerScore: countGardens(grid),
 			megaCorpControl: countMegaCorpCells(grid),
 			supportValue: support,
 			stealthLevel: 100,
 			protests: 0,
-			lastClickedCell: clickedCell, // ✅ Include for defeat checking
+			lastClickedCell: clickedCell,
 		};
 
-		// First, check if clicking this cell caused a defeat (police, etc.)
 		const defeat = checkDefeat(simulatedGameState);
 		if (defeat.defeat) {
 			handleDefeat(defeat.reason);
 			return;
 		}
 
-		// Otherwise, proceed normally
-		plantAtCell(clickedCell.id);
-		movePolice();
-		setHasPlayerActed(true);
+		// 🚨 Handle Police directly
+		if (clickedCell.unit === "police") {
+			handleDefeat("Caught by Police 🚓");
+			return;
+		}
+
+		// 🎲 Handle Event Cells
+		if (clickedCell.type === "event") {
+			const event = triggerRandomEvent(clickedCell.randomEventCategory);
+			setActiveEvent(event);
+
+			// 🌱 Also plant after event triggers
+			plantAtCell(clickedCell.id);
+			movePolice();
+			setHasPlayerActed(true);
+			return;
+		}
+		if (clickedCell.unit === "police") {
+			handleDefeat("police");
+			return;
+		}
+
+		// 🌿 Handle Normal Empty Cells
+		if (clickedCell.type === "empty") {
+			const alertLevel = getPoliceAlertLevel(
+				grid,
+				clickedCell.id,
+				gridSize
+			); // Grid size = 10
+			if (isPoliceCaught(alertLevel)) {
+				handleDefeat("Captured by Surveillance 🚨");
+				return;
+			}
+
+			plantAtCell(clickedCell.id);
+			movePolice();
+			setHasPlayerActed(true);
+		}
 	}
 
 	function evaluateGameState(currentSupport) {
@@ -85,10 +123,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			return;
 		}
 
-		const defeat = checkDefeat({
-			...gameState,
-			lastClickedCell,
-		});
+		const defeat = checkDefeat({ ...gameState, lastClickedCell });
 		if (defeat.defeat) {
 			handleDefeat(defeat.reason);
 			return;
@@ -102,18 +137,25 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		setDefeatCause(null);
 		setHasPlayerActed(false);
 		setLastClickedCell(null);
-		generateFullGrid();
 		setSupport(1);
+		setPreviousSupport(1);
+		previousSupportRef.current = 1;
+		setActiveEvent(null);
+		generateFullGrid();
 	}
 
 	useEffect(() => {
 		if (grid.length > 0 && hasPlayerActed) {
 			const updatedSupport = calculateCitySupport(grid);
+			setPreviousSupport(support);
+			previousSupportRef.current = updatedSupport;
 			setSupport(updatedSupport);
 
 			evaluateGameState(updatedSupport);
 		}
 	}, [grid, hasPlayerActed]);
+
+	const supportChange = support - previousSupport;
 
 	return (
 		<div className="w-full flex flex-col items-center">
@@ -126,11 +168,16 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 				onBackToMenu={onBackToMenu}
 			/>
 
+			<EventManager
+				activeEvent={activeEvent}
+				onClose={() => setActiveEvent(null)}
+			/>
+
 			{!isVictory && !isDefeat && (
 				<>
 					<GameLayout
 						grid={grid}
-						onCellClick={handlePlant} // ✅ Now expects full cell
+						onCellClick={handlePlant}
 						playerScore={countGardens(grid)}
 						megaCorpControl={support}
 						stealthLevel={100}
@@ -143,6 +190,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 						securityLevel={0}
 						protests={0}
 						megaCorpCells={countMegaCorpCells(grid)}
+						supportChange={supportChange}
 					/>
 
 					<GameButtons

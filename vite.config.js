@@ -10,6 +10,7 @@ export default defineConfig({
 			"@hooks": path.resolve(__dirname, "src/hooks"),
 			"@systems": path.resolve(__dirname, "src/systems"),
 			"@data": path.resolve(__dirname, "src/data"),
+			"@city": path.resolve(__dirname, "src/components/City"),
 		},
 	},
 });

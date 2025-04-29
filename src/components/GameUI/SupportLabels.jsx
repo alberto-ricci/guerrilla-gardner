@@ -18,7 +18,7 @@ export default function SupportLabels() {
 			{/* MegaCorp Label */}
 			<div className="flex flex-col items-center">
 				<span>🏢</span>
-				<span>MegaCorp Inc</span>
+				<span>MegaCorp, Inc</span>
 			</div>
 		</div>
 	);

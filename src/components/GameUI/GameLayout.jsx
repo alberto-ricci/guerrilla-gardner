@@ -9,6 +9,7 @@ const GameLayout = ({
 	onCellClick,
 	playerScore,
 	megaCorpControl,
+	supportChange, // ✅ NEW
 	stealthLevel,
 	policeCount,
 	isFrozen,
@@ -34,6 +35,7 @@ const GameLayout = ({
 				megaCorpCells={megaCorpCells}
 				protests={protests}
 				supportValue={megaCorpControl}
+				supportChange={supportChange} // ✅ Pass supportChange to Header
 			/>
 
 			{/* Panels Section: Grid and gameplay controls */}

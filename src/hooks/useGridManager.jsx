@@ -1,5 +1,3 @@
-// useGridManager.jsx (New minimal version)
-
 import { useState, useEffect } from "react";
 import { getPoliceCount } from "../systems/PoliceSystem";
 
@@ -13,28 +11,72 @@ export default function useGridManager(
 	const [grid, setGrid] = useState([]);
 	const [policePositions, setPolicePositions] = useState([]);
 
-	// 🛠 Generate an empty grid
+	// 🛠 Generate a new grid with random events
 	const generateFullGrid = () => {
-		const newGrid = Array.from({ length: gridSize * gridSize }, (_, i) => ({
+		let newGrid = Array.from({ length: gridSize * gridSize }, (_, i) => ({
 			id: i,
+			type: "empty",
 			terrain: "empty",
 			unit: null,
 			isPlanted: false,
 		}));
-		setGrid(newGrid);
-		spawnPolice(newGrid);
+
+		// 🏢 1. Place MegaCorp buildings first
+		newGrid = seedBuildings(newGrid);
+
+		// 🌟 2. Then place random event tiles
+		const seededGrid = seedRandomEvents(newGrid);
+
+		setGrid(seededGrid);
+
+		// 🚓 3. Then spawn police (avoiding buildings & events)
+		spawnPolice(seededGrid);
 	};
 
 	/**
-	 * Plant a garden at a given cell
-	 * @param {number} id - ID of the cell
+	 * Randomly seed event cells on the grid
 	 */
+	const seedRandomEvents = (gridState) => {
+		const chancePerCell = 0.08; // 8% chance each empty tile
+		const eventTypes = ["good", "bad", "neutral"];
+
+		return gridState.map((cell) => {
+			if (Math.random() < chancePerCell) {
+				const randomEvent =
+					eventTypes[Math.floor(Math.random() * eventTypes.length)];
+				return {
+					...cell,
+					type: "event",
+					randomEventCategory: randomEvent,
+				};
+			}
+			return cell;
+		});
+	};
+
+	const seedBuildings = (gridState) => {
+		const chancePerCell = 0.07; // Around 7% of the grid are buildings (adjustable)
+
+		return gridState.map((cell) => {
+			if (Math.random() < chancePerCell) {
+				return {
+					...cell,
+					type: "building",
+					terrain: "building",
+					unit: null,
+				};
+			}
+			return cell;
+		});
+	};
+
 	const plantAtCell = (id) => {
 		setGrid((prevGrid) =>
 			prevGrid.map((cell) =>
 				cell.id === id && !cell.isPlanted
 					? {
 							...cell,
+							type: "garden",
 							terrain: "garden",
 							isPlanted: true,
 							unit: null,
@@ -44,12 +86,9 @@ export default function useGridManager(
 		);
 	};
 
-	/**
-	 * Spawn initial police units randomly
-	 */
 	const spawnPolice = (gridState) => {
 		const emptyCells = gridState.filter(
-			(cell) => !cell.isPlanted && !cell.unit
+			(cell) => !cell.isPlanted && !cell.unit && cell.type !== "building"
 		);
 		const count = getPoliceCount(stealthLevel);
 
@@ -58,7 +97,11 @@ export default function useGridManager(
 			.slice(0, count);
 		const updatedGrid = gridState.map((cell) =>
 			selected.some((sel) => sel.id === cell.id)
-				? { ...cell, unit: "police" }
+				? {
+						...cell,
+						unit: "police",
+						type: "police",
+				  }
 				: cell
 		);
 
@@ -66,9 +109,6 @@ export default function useGridManager(
 		setPolicePositions(selected.map((cell) => cell.id));
 	};
 
-	/**
-	 * Move each police to a random adjacent empty cell
-	 */
 	const movePolice = () => {
 		setGrid((prevGrid) => {
 			let newGrid = [...prevGrid];
@@ -83,15 +123,18 @@ export default function useGridManager(
 						];
 
 					newGrid = newGrid.map((cell) => {
-						if (cell.id === id) return { ...cell, unit: null };
-						if (cell.id === target.id)
-							return { ...cell, unit: "police" };
+						if (cell.id === id) {
+							return { ...cell, unit: null, type: "empty" };
+						}
+						if (cell.id === target.id) {
+							return { ...cell, unit: "police", type: "police" };
+						}
 						return cell;
 					});
 
 					newPolicePositions.push(target.id);
 				} else {
-					newPolicePositions.push(id); // No move possible, stay
+					newPolicePositions.push(id);
 				}
 			});
 
@@ -100,9 +143,6 @@ export default function useGridManager(
 		});
 	};
 
-	/**
-	 * Get adjacent empty cells around a position
-	 */
 	const getAdjacentEmptyCells = (grid, id) => {
 		const row = Math.floor(id / gridSize);
 		const col = id % gridSize;
@@ -110,7 +150,7 @@ export default function useGridManager(
 			[-1, 0],
 			[1, 0],
 			[0, -1],
-			[0, 1], // UP, DOWN, LEFT, RIGHT
+			[0, 1],
 		];
 
 		const neighbors = directions
@@ -128,14 +168,17 @@ export default function useGridManager(
 				}
 				return null;
 			})
-			.filter((cell) => cell && !cell.isPlanted && !cell.unit);
+			.filter(
+				(cell) =>
+					cell &&
+					!cell.isPlanted &&
+					!cell.unit &&
+					cell.type !== "building"
+			);
 
 		return neighbors;
 	};
 
-	/**
-	 * Check for victory condition
-	 */
 	useEffect(() => {
 		const totalCells = gridSize * gridSize;
 		const plantedGardens = grid.filter(
@@ -147,7 +190,6 @@ export default function useGridManager(
 		}
 	}, [grid]);
 
-	// 🚀 Init grid on load
 	useEffect(() => {
 		generateFullGrid();
 	}, []);
