@@ -15,7 +15,8 @@ import {
 import { checkVictory } from "@systems/WinCondition";
 import { checkDefeat } from "@systems/LoseCondition";
 import { triggerRandomEvent } from "@systems/EventSystem";
-import { getPoliceAlertLevel, isPoliceCaught } from "@systems/PoliceSystem"; // ✅ Add this import!
+import { getPoliceAlertLevel, isPoliceCaught } from "@systems/PoliceSystem";
+import { updateStealth, calculateSurveillance } from "@systems/StealthSystem"; // ✅ NEW
 
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
@@ -24,6 +25,8 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const [isDefeat, setIsDefeat] = useState(false);
 	const [support, setSupport] = useState(1);
 	const [previousSupport, setPreviousSupport] = useState(1);
+	const [stealthLevel, setStealthLevel] = useState(100); // ✅ NEW
+	const [surveillanceLevel, setSurveillanceLevel] = useState(0); // ✅ NEW
 	const [defeatCause, setDefeatCause] = useState(null);
 	const [victoryReason, setVictoryReason] = useState(null);
 	const [hasPlayerActed, setHasPlayerActed] = useState(false);
@@ -34,7 +37,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 
 	const { grid, plantAtCell, movePolice, generateFullGrid } = useGridManager(
 		gridSize,
-		100,
+		stealthLevel,
 		handleVictory
 	);
 
@@ -57,7 +60,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			playerScore: countGardens(grid),
 			megaCorpControl: countMegaCorpCells(grid),
 			supportValue: support,
-			stealthLevel: 100,
+			stealthLevel: stealthLevel, // ✅ Use dynamic stealth
 			protests: 0,
 			lastClickedCell: clickedCell,
 		};
@@ -68,41 +71,48 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			return;
 		}
 
-		// 🚨 Handle Police directly
+		// 🚨 Police Tile
 		if (clickedCell.unit === "police") {
 			handleDefeat("Caught by Police 🚓");
 			return;
 		}
 
-		// 🎲 Handle Event Cells
+		// 🎲 Event Tile
 		if (clickedCell.type === "event") {
 			const event = triggerRandomEvent(clickedCell.randomEventCategory);
 			setActiveEvent(event);
 
-			// 🌱 Also plant after event triggers
 			plantAtCell(clickedCell.id);
+
+			// ✅ Update stealth
+			const newStealth = updateStealth(stealthLevel, "event");
+			setStealthLevel(newStealth);
+			setSurveillanceLevel(calculateSurveillance(newStealth));
+
 			movePolice();
 			setHasPlayerActed(true);
 			return;
 		}
-		if (clickedCell.unit === "police") {
-			handleDefeat("police");
-			return;
-		}
 
-		// 🌿 Handle Normal Empty Cells
+		// 🌿 Empty Tile
 		if (clickedCell.type === "empty") {
 			const alertLevel = getPoliceAlertLevel(
 				grid,
 				clickedCell.id,
 				gridSize
-			); // Grid size = 10
+			);
 			if (isPoliceCaught(alertLevel)) {
 				handleDefeat("Captured by Surveillance 🚨");
 				return;
 			}
 
 			plantAtCell(clickedCell.id);
+
+			// ✅ Update stealth
+			const newStealth = updateStealth(stealthLevel, "plant");
+			setStealthLevel(newStealth);
+			setSurveillanceLevel(calculateSurveillance(newStealth));
+
 			movePolice();
 			setHasPlayerActed(true);
 		}
@@ -113,7 +123,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			playerScore: countGardens(grid),
 			megaCorpControl: countMegaCorpCells(grid),
 			supportValue: currentSupport,
-			stealthLevel: 100,
+			stealthLevel: stealthLevel, // ✅ Real stealth
 			protests: 0,
 		};
 
@@ -139,6 +149,8 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		setLastClickedCell(null);
 		setSupport(1);
 		setPreviousSupport(1);
+		setStealthLevel(100); // ✅ Reset stealth
+		setSurveillanceLevel(0); // ✅ Reset surveillance
 		previousSupportRef.current = 1;
 		setActiveEvent(null);
 		generateFullGrid();
@@ -180,12 +192,12 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 						onCellClick={handlePlant}
 						playerScore={countGardens(grid)}
 						megaCorpControl={support}
-						stealthLevel={100}
+						stealthLevel={stealthLevel} // ✅ Real stealth
+						surveillanceLevel={surveillanceLevel} // ✅ Real surveillance
 						policeCount={countPoliceUnits(grid)}
 						isFrozen={isVictory || isDefeat}
 						momentum={0}
 						resources={0}
-						surveillanceLevel={0}
 						droneActivity={0}
 						securityLevel={0}
 						protests={0}

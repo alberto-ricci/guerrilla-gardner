@@ -1,23 +1,31 @@
-// GuerrillaPanel.jsx
-// Displays the Guerrilla player's current stealth level, resources, and momentum.
-
 import React from "react";
-import { StealthBar } from "@components"; // Uses clean alias
 
 const GuerrillaPanel = ({ stealthLevel, resources, momentum }) => {
 	return (
 		<div className="w-full h-full p-6 bg-green-200 rounded-xl shadow-md flex flex-col gap-4">
-			{/* Panel Title */}
 			<h2 className="text-2xl font-bold text-green-900">
 				✊🏻 Guerrilla Gardener
 			</h2>
 
 			{/* Stealth Meter */}
 			<div>
-				<StealthBar stealthLevel={stealthLevel} />
+				<h3 className="text-lg font-semibold text-black">
+					🕶️ Stealth Level ({stealthLevel}%)
+				</h3>
+				<div className="h-4 w-full bg-white border border-black rounded-full overflow-hidden">
+					<div
+						className="h-full transition-all duration-500"
+						style={{
+							width: `${stealthLevel}%`,
+							backgroundColor: `rgb(${
+								255 - stealthLevel * 2.55
+							}, ${stealthLevel * 2.55}, 0)`, // Green ➝ Red
+						}}
+					/>
+				</div>
 			</div>
 
-			{/* Resources Info */}
+			{/* Resources */}
 			<div>
 				<h3 className="text-lg font-semibold text-black">
 					🛠️ Resources
@@ -25,7 +33,7 @@ const GuerrillaPanel = ({ stealthLevel, resources, momentum }) => {
 				<p className="text-black">{resources} Seeds/Tools</p>
 			</div>
 
-			{/* Momentum Meter */}
+			{/* Momentum */}
 			<div>
 				<h3 className="text-lg font-semibold text-black">
 					⚡ Momentum

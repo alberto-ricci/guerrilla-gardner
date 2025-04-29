@@ -1,26 +1,29 @@
-// MegaCorpPanel.jsx
-// Displays MegaCorp's surveillance, drone activity, and security levels.
-
 import React from "react";
 
 const MegaCorpPanel = ({ surveillanceLevel, droneActivity, securityLevel }) => {
 	return (
 		<div className="w-full h-full p-6 bg-gray-800 text-white rounded-xl shadow-md flex flex-col gap-4">
-			{/* Panel Title */}
 			<h2 className="text-2xl font-bold">🏢 MegaCorp, Inc.</h2>
 
-			{/* Surveillance Level Meter */}
+			{/* Surveillance */}
 			<div>
-				<h3 className="text-lg font-semibold">📹 Surveillance Level</h3>
-				<div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
+				<h3 className="text-lg font-semibold">
+					📹 Surveillance Level ({surveillanceLevel}%)
+				</h3>
+				<div className="h-4 w-full bg-white border border-black rounded-full overflow-hidden">
 					<div
-						className="h-full bg-red-500 transition-all duration-500"
-						style={{ width: `${surveillanceLevel}%` }}
+						className="h-full transition-all duration-500"
+						style={{
+							width: `${surveillanceLevel}%`,
+							backgroundColor: `rgb(${
+								surveillanceLevel * 2.55
+							}, ${255 - surveillanceLevel * 2.55}, 0)`, // Red ← Green
+						}}
 					/>
 				</div>
 			</div>
 
-			{/* Drone Activity Meter */}
+			{/* Drone Activity */}
 			<div>
 				<h3 className="text-lg font-semibold">🚁 Drone Activity</h3>
 				<div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
@@ -31,7 +34,7 @@ const MegaCorpPanel = ({ surveillanceLevel, droneActivity, securityLevel }) => {
 				</div>
 			</div>
 
-			{/* Security Level Meter */}
+			{/* Security Level */}
 			<div>
 				<h3 className="text-lg font-semibold">🔒 Security Level</h3>
 				<div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
