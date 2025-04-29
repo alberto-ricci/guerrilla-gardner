@@ -1,30 +1,40 @@
+// useGridManager.jsx
+// Custom hook to manage the city grid, police units, and planting actions.
+
 import { useState, useEffect } from "react";
 import {
 	getPoliceAlertLevel,
 	isPoliceCaught,
 	getPoliceCount,
-	spawnPoliceOnGrid,
 } from "../systems/PoliceSystem";
 
 export const DEFAULT_GRID_SIZE = 10;
 
+// Weighted lists for terrain and unit generation
 export const TERRAIN_TYPES = [
 	{ type: "empty", weight: 5 },
 	{ type: "building", weight: 3 },
 	{ type: "abandoned", weight: 2 },
 ];
 
-export const UNIT_TYPES = [
-	{ type: "police", weight: 1 }, // more unit types can be added later
-];
+export const UNIT_TYPES = [{ type: "police", weight: 1 }];
 
+/**
+ * Utility to generate a list where elements appear multiple times based on weight
+ * @param {Array} types - Array of {type, weight}
+ * @returns {Array} - Flattened weighted list
+ */
 function generateWeightedList(types) {
 	return types.flatMap(({ type, weight }) =>
 		Array.from({ length: weight }, () => type)
 	);
 }
 
-// 🛠 Generate a fresh terrain-only grid
+/**
+ * Generate a fresh terrain-only grid
+ * @param {number} gridSize - Size of the city grid
+ * @returns {Array} - Terrain grid
+ */
 function generateTerrainGrid(gridSize) {
 	const terrainList = generateWeightedList(TERRAIN_TYPES);
 
@@ -38,7 +48,12 @@ function generateTerrainGrid(gridSize) {
 	}));
 }
 
-// 🛠 Add units (e.g., police) onto an existing terrain grid
+/**
+ * Populate a grid with units like police
+ * @param {Array} grid - Current terrain grid
+ * @param {number} policeCount - How many police units to spawn
+ * @returns {Array} - Updated grid
+ */
 function populateUnits(grid, policeCount) {
 	const availableCells = grid.filter(
 		(cell) => cell.terrain === "empty" || cell.terrain === "abandoned"
@@ -63,7 +78,9 @@ export default function useGridManager(
 	const [grid, setGrid] = useState([]);
 	const [policeCount, setPoliceCount] = useState(1);
 
-	// 🛠 Full new grid generator
+	/**
+	 * Generate a full new terrain + units grid
+	 */
 	const generateFullGrid = () => {
 		const baseTerrainGrid = generateTerrainGrid(gridSize);
 		const currentPoliceCount = getPoliceCount(stealthLevel);
@@ -76,32 +93,23 @@ export default function useGridManager(
 		setGrid(populatedGrid);
 	};
 
-	// 🚀 Init on load
-	useEffect(() => {
-		generateFullGrid();
-	}, []);
-
-	// 🚀 Update police based on stealth level
-	useEffect(() => {
-		const currentPoliceCount = getPoliceCount(stealthLevel);
-		setPoliceCount(currentPoliceCount);
-		setGrid((prev) => populateUnits(prev, currentPoliceCount));
-	}, [stealthLevel]);
-
+	/**
+	 * Plant action on a cell, handles police detection and garden planting
+	 * @param {number} id - ID of the targeted cell
+	 * @param {Object} callbacks - Optional event handlers (ex: onPoliceCatch)
+	 */
 	const plantAtCell = (id, callbacks) => {
 		if (!grid) return;
 
 		const targetCell = grid.find((cell) => cell.id === id);
 		if (!targetCell) return;
 
-		// Cannot plant if not allowed
 		if (
 			targetCell.terrain === "building" ||
 			targetCell.terrain === "garden"
 		)
 			return;
 
-		// Check police alert
 		const alertLevel = getPoliceAlertLevel(grid, id, gridSize);
 
 		if (isPoliceCaught(alertLevel)) {
@@ -113,6 +121,10 @@ export default function useGridManager(
 		markCellAsGarden(id);
 	};
 
+	/**
+	 * Mark a cell as police caught (caught trying to plant)
+	 * @param {number} id - ID of the cell
+	 */
 	const markCellAsCaught = (id) => {
 		setGrid((prev) =>
 			prev.map((cell) =>
@@ -121,6 +133,10 @@ export default function useGridManager(
 		);
 	};
 
+	/**
+	 * Mark a cell as successfully planted (garden created)
+	 * @param {number} id - ID of the cell
+	 */
 	const markCellAsGarden = (id) => {
 		setGrid((prev) =>
 			prev.map((cell) =>
@@ -135,6 +151,18 @@ export default function useGridManager(
 			)
 		);
 	};
+
+	// 🚀 Generate grid on first mount
+	useEffect(() => {
+		generateFullGrid();
+	}, []);
+
+	// 🚀 Recalculate police when stealth level changes
+	useEffect(() => {
+		const currentPoliceCount = getPoliceCount(stealthLevel);
+		setPoliceCount(currentPoliceCount);
+		setGrid((prev) => populateUnits(prev, currentPoliceCount));
+	}, [stealthLevel]);
 
 	return {
 		grid,

@@ -1,8 +1,8 @@
+// App.jsx
+// Entry point of the game. Manages menu, loading, and gameplay screens.
+
 import { useState } from "react";
-import MainMenu from "./components/MainMenu";
-import LoadingScreen from "./components/LoadingScreen";
-import GameScreen from "./components/GameScreen";
-import FadeWrapper from "./components/FadeWrapper";
+import { MainMenu, LoadingScreen, GameScreen, FadeWrapper } from "@components";
 
 export default function App() {
 	const [gameStarted, setGameStarted] = useState(false);
@@ -19,10 +19,16 @@ export default function App() {
 		"Tip: Spread gardens wide to defeat MegaCorp faster! 🌍",
 	];
 
+	/**
+	 * Pick a random tip to display during the loading screen.
+	 */
 	const pickRandomTip = () => {
 		return tips[Math.floor(Math.random() * tips.length)];
 	};
 
+	/**
+	 * Handle starting the game, show loading screen first.
+	 */
 	const handleStartGame = () => {
 		setRandomTip(pickRandomTip());
 		setIsLoading(true);
@@ -30,13 +36,19 @@ export default function App() {
 		setTimeout(() => {
 			setIsLoading(false);
 			setGameStarted(true);
-		}, 1000); // Simulate loading
+		}, 1000); // Simulate loading time
 	};
 
+	/**
+	 * Handle returning back to the main menu.
+	 */
 	const handleBackToMenu = () => {
 		setGameStarted(false);
 	};
 
+	/**
+	 * Render the appropriate screen based on current game state.
+	 */
 	const renderContent = () => {
 		if (!gameStarted) {
 			return isLoading ? (
