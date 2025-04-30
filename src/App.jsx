@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import { MainMenu, LoadingScreen, GameScreen, FadeWrapper } from "@components";
-import { CityGrid, CityCell } from "@components/city";
 import GameIntroModal from "@components/Screens/GameIntroModal";
 
 export default function App() {
