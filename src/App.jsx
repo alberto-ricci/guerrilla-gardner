@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { MainMenu, LoadingScreen, GameScreen, FadeWrapper } from "@components";
 import { CityGrid, CityCell } from "@components/city";
+import GameIntroModal from "@components/Screens/GameIntroModal";
 
 export default function App() {
 	const [gameStarted, setGameStarted] = useState(false);
@@ -13,10 +14,9 @@ export default function App() {
 	const tips = [
 		"Tip: Plant on abandoned lots for less stealth risk! 🌿",
 		"Tip: Watch your stealth meter carefully! 🕵️‍♂️",
-		"Tip: Empty lots are safer than corporate buildings! ⬜🏢",
+		"Tip: Empty lots = less heat than business districts! ⬜🚨",
 		"Tip: Some events can help you recover stealth! ✨",
 		"Tip: Victory requires patience and planning! 🌱",
-		"Tip: Sometimes waiting a turn is smarter than rushing! ⏳",
 		"Tip: Spread gardens wide to defeat MegaCorp faster! 🌍",
 	];
 
@@ -75,6 +75,7 @@ export default function App() {
 
 	return (
 		<div className="min-h-screen bg-green-100 flex flex-col items-center justify-center p-4">
+			{gameStarted && !isLoading && <GameIntroModal />}
 			{renderContent()}
 		</div>
 	);

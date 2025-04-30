@@ -1,6 +1,3 @@
-// WelcomeScreen.jsx
-// Displays the introduction, story, and start button for Guerrilla Gardener.
-
 import { motion } from "framer-motion";
 import { QuoteBox, FadeWrapper } from "@components";
 
@@ -10,55 +7,47 @@ export default function WelcomeScreen({ onNext }) {
 
 	return (
 		<FadeWrapper>
-			<div className="flex flex-col items-center justify-center h-screen w-full bg-gradient-to-b from-green-50 to-green-100 p-6 text-center overflow-hidden">
+			<div className="flex flex-col items-center justify-between h-screen w-full bg-gradient-to-b from-green-50 to-green-100 p-6 text-center overflow-hidden">
 				{/* Title Section */}
-				<div className="flex flex-col items-center mb-6">
+				<motion.div
+					initial={{ opacity: 0, y: -30 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.8, ease: "easeOut" }}
+					className="mt-8 flex flex-col items-center"
+				>
 					<h1 className="text-5xl sm:text-7xl font-extrabold text-green-800 mb-2 drop-shadow-lg">
 						Guerrilla Gardener 🌱
 					</h1>
-					<span className="text-sm sm:text-lg text-green-600 font-medium">
+					<span className="text-sm sm:text-lg text-green-600 font-medium tracking-wide">
 						A stealth game where your only weapon is a seed.
 					</span>
-				</div>
-
-				{/* Story / Game Description */}
-				<div className="flex flex-col items-center w-full max-w-4xl text-green-900 px-4 mb-8">
-					<p className="text-base sm:text-lg font-medium leading-relaxed tracking-wide text-center">
-						<span className="text-green-800 font-bold text-2xl block mb-4">
-							Plant Rebellion, Grow Resistance 🌿
-						</span>
-						The city is a prison of steel and surveillance —
-						MegaCorp, Inc. owns it all. But you? You're a shadow, a
-						saboteur, turning sterile streets into battlegrounds of
-						life and defiance.
-						<br />
-						<br />
-						Every seed you plant is a blow against the system. Every
-						garden cracks the concrete with rebellion. But beware —
-						MegaCorp’s enforcers hunt down every leaf of freedom.
-						🚓🏢
-						<br />
-						<br />
-						<span className="italic text-green-700">
-							This isn’t gardening. This is Revolution.
-						</span>{" "}
-						✊🔥
-					</p>
-				</div>
+				</motion.div>
 
 				{/* Start Button */}
-				<motion.button
-					onClick={onNext}
-					className={startButtonStyle}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.4, duration: 0.6 }}
+					className="my-12"
 				>
-					Start 🌱
-				</motion.button>
+					<button
+						onClick={onNext}
+						className={startButtonStyle}
+					>
+						Start 🌱
+					</button>
+				</motion.div>
 
-				{/* QuoteBox and Jam Description */}
-				<div className="flex flex-col items-center mt-8 max-w-2xl text-green-800 text-sm sm:text-base px-4">
+				{/* Quote and Jam Info */}
+				<motion.div
+					initial={{ opacity: 0, y: 30 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.6, duration: 0.8 }}
+					className="w-full max-w-2xl mb-6 px-4 text-green-800 text-sm sm:text-base"
+				>
 					<QuoteBox />
 
-					<div className="flex flex-col items-center mt-6">
+					<div className="flex flex-col items-center mt-6 text-center">
 						<h3 className="text-green-700 text-xl font-bold mb-2 underline underline-offset-4">
 							About the Jam 🌱
 						</h3>
@@ -72,7 +61,7 @@ export default function WelcomeScreen({ onNext }) {
 							Created by mblede ✊
 						</p>
 					</div>
-				</div>
+				</motion.div>
 			</div>
 		</FadeWrapper>
 	);
