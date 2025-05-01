@@ -5,39 +5,33 @@ export const DEFAULT_GRID_SIZE = 10;
 
 export default function useGridManager(
 	gridSize = DEFAULT_GRID_SIZE,
-	stealthLevel,
 	onVictory
 ) {
 	const [grid, setGrid] = useState([]);
 	const [policePositions, setPolicePositions] = useState([]);
 
 	// 🛠 Generate a new grid with random events
-	const generateFullGrid = () => {
+	const generateFullGrid = (stealthLevel = 100) => {
 		let newGrid = Array.from({ length: gridSize * gridSize }, (_, i) => ({
 			id: i,
 			type: "empty",
 			terrain: "empty",
 			unit: null,
 			isPlanted: false,
+			stealthHit: 5,
 		}));
 
-		// 🏢 1. Place MegaCorp buildings first
 		newGrid = seedBuildings(newGrid);
+		newGrid = seedRandomEvents(newGrid);
+		newGrid = assignStealthHits(newGrid);
 
-		// 🌟 2. Then place random event tiles
-		const seededGrid = seedRandomEvents(newGrid);
-
-		setGrid(seededGrid);
-
-		// 🚓 3. Then spawn police (avoiding buildings & events)
-		spawnPolice(seededGrid);
+		// Store and spawn police based on provided stealth
+		setGrid(newGrid);
+		spawnPolice(newGrid, stealthLevel);
 	};
 
-	/**
-	 * Randomly seed event cells on the grid
-	 */
 	const seedRandomEvents = (gridState) => {
-		const chancePerCell = 0.08; // 8% chance each empty tile
+		const chancePerCell = 0.08;
 		const eventTypes = ["good", "bad", "neutral"];
 
 		return gridState.map((cell) => {
@@ -55,7 +49,7 @@ export default function useGridManager(
 	};
 
 	const seedBuildings = (gridState) => {
-		const chancePerCell = 0.07; // Around 7% of the grid are buildings (adjustable)
+		const chancePerCell = 0.07;
 
 		return gridState.map((cell) => {
 			if (Math.random() < chancePerCell) {
@@ -68,6 +62,73 @@ export default function useGridManager(
 			}
 			return cell;
 		});
+	};
+
+	const assignStealthHits = (gridState) => {
+		const updatedGrid = [...gridState];
+
+		for (let i = 0; i < updatedGrid.length; i++) {
+			const cell = updatedGrid[i];
+			if (cell.type !== "empty") continue;
+
+			const row = Math.floor(i / gridSize);
+			const col = i % gridSize;
+
+			const directions = [
+				[-1, 0],
+				[1, 0],
+				[0, -1],
+				[0, 1],
+			];
+
+			let nearBuilding = false;
+
+			for (let [dx, dy] of directions) {
+				const newRow = row + dx;
+				const newCol = col + dy;
+
+				if (
+					newRow >= 0 &&
+					newRow < gridSize &&
+					newCol >= 0 &&
+					newCol < gridSize
+				) {
+					const neighborId = newRow * gridSize + newCol;
+					const neighbor = gridState[neighborId];
+					if (neighbor?.type === "building") {
+						nearBuilding = true;
+						break;
+					}
+				}
+			}
+
+			updatedGrid[i] = {
+				...cell,
+				stealthHit: nearBuilding ? 10 : 5,
+			};
+		}
+
+		return updatedGrid;
+	};
+
+	const spawnPolice = (gridState, stealthLevel = 100) => {
+		const emptyCells = gridState.filter(
+			(cell) => !cell.isPlanted && !cell.unit && cell.type !== "building"
+		);
+		const count = getPoliceCount(stealthLevel);
+
+		const selected = emptyCells
+			.sort(() => Math.random() - 0.5)
+			.slice(0, count);
+
+		const updatedGrid = gridState.map((cell) =>
+			selected.some((sel) => sel.id === cell.id)
+				? { ...cell, unit: "police", type: "police" }
+				: cell
+		);
+
+		setGrid(updatedGrid);
+		setPolicePositions(selected.map((cell) => cell.id));
 	};
 
 	const plantAtCell = (id) => {
@@ -84,29 +145,6 @@ export default function useGridManager(
 					: cell
 			)
 		);
-	};
-
-	const spawnPolice = (gridState) => {
-		const emptyCells = gridState.filter(
-			(cell) => !cell.isPlanted && !cell.unit && cell.type !== "building"
-		);
-		const count = getPoliceCount(stealthLevel);
-
-		const selected = emptyCells
-			.sort(() => Math.random() - 0.5)
-			.slice(0, count);
-		const updatedGrid = gridState.map((cell) =>
-			selected.some((sel) => sel.id === cell.id)
-				? {
-						...cell,
-						unit: "police",
-						type: "police",
-				  }
-				: cell
-		);
-
-		setGrid(updatedGrid);
-		setPolicePositions(selected.map((cell) => cell.id));
 	};
 
 	const movePolice = () => {
@@ -153,7 +191,7 @@ export default function useGridManager(
 			[0, 1],
 		];
 
-		const neighbors = directions
+		return directions
 			.map(([dx, dy]) => {
 				const newRow = row + dx;
 				const newCol = col + dy;
@@ -175,8 +213,6 @@ export default function useGridManager(
 					!cell.unit &&
 					cell.type !== "building"
 			);
-
-		return neighbors;
 	};
 
 	useEffect(() => {
