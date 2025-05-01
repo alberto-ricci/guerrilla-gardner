@@ -1,52 +1,33 @@
-// GamePanels.jsx
-// Main gameplay section displaying the Guerrilla Panel, City Grid, and MegaCorp Panel side by side.
+// components/layout/GamePanels.jsx
+// 🧩 Three-column layout: Guerrilla Panel | Game Grid | MegaCorp Panel
 
-import { GuerrillaPanel, MegaCorpPanel, CityGrid } from "@components"; // Updated to use the @components alias
+import GuerrillaPanelWrapper from "./GuerrillaPanelWrapper";
+import GameGridPanel from "./GameGridPanel";
+import MegaCorpPanelWrapper from "./MegaCorpPanelWrapper";
 
-export default function GamePanels({
-	grid,
-	onCellClick,
-	playerScore,
-	megaCorpControl,
-	policeCount,
-	isFrozen,
-	momentum,
-	resources,
-	surveillanceLevel,
-	droneActivity,
-	securityLevel,
-}) {
+export default function GamePanels(props) {
 	return (
 		<div className="flex gap-4 items-stretch">
-			{/* Left Panel: Guerrilla faction controls */}
-			<div className="w-1/4">
-				<GuerrillaPanel
-					stealthLevel={policeCount}
-					momentum={momentum}
-					resources={resources}
-				/>
-			</div>
+			<GuerrillaPanelWrapper
+				stealthLevel={props.stealthLevel}
+				momentum={props.momentum}
+				resources={props.resources}
+			/>
 
-			{/* Center: City Grid gameplay area */}
-			<div className="w-1/2">
-				<CityGrid
-					grid={grid}
-					onCellClick={onCellClick}
-					playerScore={playerScore}
-					megaCorpControl={megaCorpControl}
-					policeCount={policeCount}
-					isFrozen={isFrozen}
-				/>
-			</div>
+			<GameGridPanel
+				grid={props.grid}
+				onCellClick={props.onCellClick}
+				playerScore={props.playerScore}
+				megaCorpControl={props.megaCorpControl}
+				policeCount={props.policeCount}
+				isFrozen={props.isFrozen}
+			/>
 
-			{/* Right Panel: MegaCorp faction controls */}
-			<div className="w-1/4">
-				<MegaCorpPanel
-					surveillanceLevel={surveillanceLevel}
-					droneActivity={droneActivity}
-					securityLevel={securityLevel}
-				/>
-			</div>
+			<MegaCorpPanelWrapper
+				surveillanceLevel={props.surveillanceLevel}
+				droneActivity={props.droneActivity}
+				securityLevel={props.securityLevel}
+			/>
 		</div>
 	);
 }

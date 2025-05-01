@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { SupportBar, SupportLabels, SupportStatus } from "@components";
+// components/ui/CityControlMeter.jsx
+// 📊 Displays the city support bar (clamped between -1 and 1)
 
+import React from "react";
+import { SupportBar } from "@components";
+
+/**
+ * Renders a UI bar showing public support for the player.
+ * Accepts a supportValue ranging from -1 (full MegaCorp support)
+ * to +1 (full Guerrilla support).
+ */
 export default function CityControlMeter({ supportValue = 0 }) {
-	// Clamp the support value between -1 and 1 to avoid invalid percentages
+	// Clamp to safe range [-1, 1] to avoid visual glitches
 	const clampedSupport = Math.max(-1, Math.min(1, supportValue));
-
-	const [animateBump, setAnimateBump] = useState(false);
-
-	useEffect(() => {
-		// Trigger a bump animation whenever supportValue changes
-		setAnimateBump(true);
-		const timer = setTimeout(() => setAnimateBump(false), 300);
-		return () => clearTimeout(timer);
-	}, [supportValue]);
 
 	return (
 		<div className="flex flex-col items-center w-full mb-6">
-			{/* City Support Mood Bar */}
 			<SupportBar supportValue={clampedSupport} />
 		</div>
 	);
