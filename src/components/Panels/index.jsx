@@ -1,5 +1,3 @@
-// src/components/Panels/index.jsx
-
 // Primary Panels
 export { default as GuerrillaPanel } from "./GuerrillaPanel";
 export { default as MegaCorpPanel } from "./MegaCorpPanel";
@@ -13,6 +11,7 @@ export { default as SurveillanceBar } from "./SurveillanceBar";
 export { default as GuerrillaPanelHeader } from "./GuerrillaPanelHeader";
 export { default as GuerrillaResources } from "./GuerrillaResources";
 export { default as GuerrillaMomentumBar } from "./GuerrillaMomentumBar";
+export { default as GuerrillaActions } from "./GuerrillaActions";
 
 // MegaCorp Subcomponents
 export { default as MegaCorpPanelHeader } from "./MegaCorpPanelHeader";
