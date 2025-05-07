@@ -10,12 +10,10 @@ export default function useGridManager(
 	const [grid, setGrid] = useState([]);
 	const [policePositions, setPolicePositions] = useState([]);
 
-	// Initialize game grid
 	useEffect(() => {
 		generateFullGrid();
 	}, []);
 
-	// Check win condition
 	useEffect(() => {
 		const totalCells = gridSize * gridSize;
 		const plantedGardens = grid.filter(
@@ -26,7 +24,6 @@ export default function useGridManager(
 		}
 	}, [grid]);
 
-	// Generate new grid
 	const generateFullGrid = (stealthLevel = 100) => {
 		let newGrid = Array.from({ length: gridSize * gridSize }, (_, i) => ({
 			id: i,
@@ -45,7 +42,6 @@ export default function useGridManager(
 		spawnPolice(newGrid, stealthLevel);
 	};
 
-	// Add buildings
 	const seedBuildings = (gridState) => {
 		const chancePerCell = 0.07;
 		return gridState.map((cell) =>
@@ -55,7 +51,6 @@ export default function useGridManager(
 		);
 	};
 
-	// Add random events
 	const seedRandomEvents = (gridState) => {
 		const chancePerCell = 0.08;
 		const eventTypes = ["good", "bad", "neutral"];
@@ -74,7 +69,6 @@ export default function useGridManager(
 		);
 	};
 
-	// Assign stealth penalties based on proximity to buildings
 	const assignStealthHits = (gridState) => {
 		return gridState.map((cell, i) => {
 			if (cell.type !== "empty") return cell;
@@ -107,17 +101,17 @@ export default function useGridManager(
 		});
 	};
 
-	// Spawn police units on valid tiles
 	const spawnPolice = (gridState, stealthLevel = 100) => {
 		const validSpawnCells = gridState.filter(
 			(cell) =>
 				!cell.isPlanted &&
 				!cell.unit &&
 				cell.type !== "building" &&
-				cell.type !== "event"
+				cell.type !== "event" &&
+				cell.type !== "protest" // Prevent spawning on protest tiles
 		);
-		const count = getPoliceCount(stealthLevel);
 
+		const count = getPoliceCount(stealthLevel);
 		const selected = validSpawnCells
 			.sort(() => Math.random() - 0.5)
 			.slice(0, count);
@@ -132,7 +126,6 @@ export default function useGridManager(
 		setPolicePositions(selected.map((cell) => cell.id));
 	};
 
-	// Plant garden at specified cell
 	const plantAtCell = (id) => {
 		setGrid((prevGrid) =>
 			prevGrid.map((cell) =>
@@ -149,7 +142,6 @@ export default function useGridManager(
 		);
 	};
 
-	// Move police randomly to adjacent valid cells
 	const movePolice = () => {
 		setGrid((prevGrid) => {
 			let newGrid = [...prevGrid];
@@ -182,7 +174,6 @@ export default function useGridManager(
 		});
 	};
 
-	// Return valid cells for police to move into
 	const getValidPoliceMoves = (grid, id) => {
 		const row = Math.floor(id / gridSize);
 		const col = id % gridSize;
@@ -210,15 +201,17 @@ export default function useGridManager(
 			.filter((cell) => cell && !isBlockedForPolice(cell));
 	};
 
-	// Helper: check if cell blocks police movement
 	const isBlockedForPolice = (cell) =>
 		cell.isPlanted ||
 		cell.unit ||
 		cell.type === "building" ||
-		cell.type === "event";
+		cell.type === "event" ||
+		cell.type === "protest" ||
+		cell.policeBlocked;
 
 	return {
 		grid,
+		setGrid,
 		plantAtCell,
 		movePolice,
 		generateFullGrid,

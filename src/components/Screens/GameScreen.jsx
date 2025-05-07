@@ -17,6 +17,7 @@ import { checkDefeat } from "@systems/LoseCondition";
 import { getPoliceAlertLevel, isPoliceCaught } from "@systems/PoliceSystem";
 import { useStealthManager } from "@hooks/useStealthManager";
 import useEventManager from "@hooks/useEventManager";
+import useMomentumManager from "@hooks/useMomentumManager";
 
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
@@ -25,7 +26,6 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const [isDefeat, setIsDefeat] = useState(false);
 	const [support, setSupport] = useState(1);
 	const [previousSupport, setPreviousSupport] = useState(1);
-
 	const [defeatCause, setDefeatCause] = useState(null);
 	const [victoryReason, setVictoryReason] = useState(null);
 	const [hasPlayerActed, setHasPlayerActed] = useState(false);
@@ -37,11 +37,16 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const { stealth, surveillance, applyStealthHit, resetStealth } =
 		useStealthManager();
 
-	const { grid, plantAtCell, movePolice, generateFullGrid } = useGridManager(
-		gridSize,
-		stealth,
-		handleVictory
-	);
+	const {
+		grid,
+		setGrid, // Make sure this is exposed from useGridManager
+		plantAtCell,
+		movePolice,
+		generateFullGrid,
+	} = useGridManager(gridSize, stealth, handleVictory);
+
+	const { momentum, protestCount, handleGardenPlanted, resetMomentum } =
+		useMomentumManager(grid, setGrid);
 
 	const { activeEvent, triggerRandomEvent, closeEvent } = useEventManager(
 		handleVictory,
@@ -68,7 +73,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			megaCorpControl: countMegaCorpCells(grid),
 			supportValue: support,
 			stealthLevel: stealth,
-			protests: 0,
+			protests: protestCount,
 			lastClickedCell: clickedCell,
 		};
 
@@ -85,6 +90,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 
 		if (clickedCell.type === "event") {
 			plantAtCell(clickedCell.id);
+			handleGardenPlanted();
 
 			triggerRandomEvent(
 				{
@@ -109,18 +115,26 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			return;
 		}
 
-		if (clickedCell.type === "empty") {
-			const alertLevel = getPoliceAlertLevel(
-				grid,
-				clickedCell.id,
-				gridSize
-			);
+		if (clickedCell.type === "empty" || clickedCell.type === "protest") {
+			const alertLevel =
+				clickedCell.type === "protest"
+					? 0
+					: getPoliceAlertLevel(grid, clickedCell.id, gridSize);
+
 			if (isPoliceCaught(alertLevel)) {
 				handleDefeat("Captured by Surveillance 🚨");
 				return;
 			}
+
 			plantAtCell(clickedCell.id);
-			applyStealthHit(null, clickedCell.stealthHit);
+			handleGardenPlanted();
+
+			if (clickedCell.type === "protest" || clickedCell.protestSupport) {
+				applyStealthHit(null, 0);
+			} else {
+				applyStealthHit(null, clickedCell.stealthHit);
+			}
+
 			movePolice();
 			setHasPlayerActed(true);
 		}
@@ -132,7 +146,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			megaCorpControl: countMegaCorpCells(grid),
 			supportValue: currentSupport,
 			stealthLevel: stealth,
-			protests: 0,
+			protests: protestCount,
 		};
 
 		const victory = checkVictory(gameState);
@@ -161,13 +175,12 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		previousSupportRef.current = 1;
 		setIsReady(false);
 
-		resetStealth(); // Resets to 100
+		resetStealth();
+		resetMomentum();
 
 		requestAnimationFrame(() => {
 			generateFullGrid(100);
 		});
-
-		console.log("stealth before generating grid:", stealth);
 	}
 
 	useEffect(() => {
@@ -220,11 +233,9 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 						surveillanceLevel={surveillance}
 						policeCount={countPoliceUnits(grid)}
 						isFrozen={isVictory || isDefeat}
-						momentum={0}
-						resources={0}
-						droneActivity={0}
-						securityLevel={0}
-						protests={0}
+						momentum={momentum}
+						protests={protestCount}
+						momentumLevel={momentum}
 						megaCorpCells={countMegaCorpCells(grid)}
 						supportChange={supportChange}
 					/>

@@ -6,7 +6,7 @@ export { default as MegaCorpPanel } from "./MegaCorpPanel";
 
 // Core Bars
 export { default as ProgressBar } from "./ProgressBar";
-export { default as StealthBar } from "./StealthBar";
+export { default as StealthBar } from "./GuerrillaStealthBar";
 export { default as SurveillanceBar } from "./SurveillanceBar";
 
 // Guerrilla Subcomponents
