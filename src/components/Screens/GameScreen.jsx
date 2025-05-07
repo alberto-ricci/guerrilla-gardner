@@ -34,16 +34,16 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 
 	const previousSupportRef = useRef(support);
 
-	const { stealth, surveillance, applyStealthHit, resetStealth } =
-		useStealthManager();
-
 	const {
-		grid,
-		setGrid, // Make sure this is exposed from useGridManager
-		plantAtCell,
-		movePolice,
-		generateFullGrid,
-	} = useGridManager(gridSize, stealth, handleVictory);
+		stealth,
+		surveillance,
+		applyStealthHit,
+		setSurveillance,
+		resetStealth,
+	} = useStealthManager();
+
+	const { grid, setGrid, plantAtCell, movePolice, generateFullGrid } =
+		useGridManager(gridSize, stealth, handleVictory);
 
 	const { momentum, protestCount, handleGardenPlanted, resetMomentum } =
 		useMomentumManager(grid, setGrid);
@@ -52,6 +52,9 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		handleVictory,
 		handleDefeat
 	);
+
+	const [sabotageUses, setSabotageUses] = useState(0);
+	const MAX_SABOTAGE = 5;
 
 	function handleVictory(reason = "Victory!") {
 		setIsVictory(true);
@@ -206,6 +209,20 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 
 	const supportChange = support - previousSupport;
 
+	function handleSkipTurn() {
+		applyStealthHit(null, -5);
+		movePolice();
+		setHasPlayerActed(true);
+	}
+
+	function handleSabotage() {
+		setSurveillance((prev) => Math.max(0, prev - 5)); // React will update UI correctly
+		setSabotageUses((prev) => prev + 1);
+
+		movePolice(); // no param
+		setHasPlayerActed(true);
+	}
+
 	return (
 		<div className="w-full flex flex-col items-center">
 			<GameStateManager
@@ -238,6 +255,9 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 						momentumLevel={momentum}
 						megaCorpCells={countMegaCorpCells(grid)}
 						supportChange={supportChange}
+						onSkipTurn={handleSkipTurn}
+						onSabotage={handleSabotage}
+						sabotageUses={sabotageUses}
 					/>
 
 					<GameButtons

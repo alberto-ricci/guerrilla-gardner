@@ -12,6 +12,10 @@ export default function GamePanels(props) {
 				stealthLevel={props.stealthLevel}
 				momentum={props.momentum}
 				resources={props.resources}
+				onSkipTurn={props.onSkipTurn}
+				surveillanceLevel={props.surveillanceLevel}
+				onSabotage={props.onSabotage}
+				sabotageCount={props.sabotageUses}
 			/>
 
 			<GameGridPanel

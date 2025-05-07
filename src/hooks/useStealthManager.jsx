@@ -22,5 +22,6 @@ export const useStealthManager = () => {
 		surveillance,
 		applyStealthHit,
 		resetStealth,
+		setSurveillance,
 	};
 };

@@ -5,6 +5,10 @@ export default function GuerrillaPanelWrapper({
 	stealthLevel,
 	momentum,
 	resources,
+	onSkipTurn,
+	onSabotage,
+	sabotageCount,
+	surveillanceLevel,
 }) {
 	return (
 		<div className="w-1/4">
@@ -12,6 +16,10 @@ export default function GuerrillaPanelWrapper({
 				stealthLevel={stealthLevel}
 				momentum={momentum}
 				resources={resources}
+				onSkipTurn={onSkipTurn}
+				onSabotage={onSabotage}
+				sabotageCount={sabotageCount}
+				surveillanceLevel={surveillanceLevel}
 			/>
 		</div>
 	);
