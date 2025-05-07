@@ -39,7 +39,8 @@ const neutralEvents = [
 	},
 	{
 		title: "Maintenance Strike",
-		message: "City workers strike. Surveillance is temporarily lower.",
+		message:
+			"City workers strike. Surveillance is temporarily lower. But not enough to matter.",
 		effect: ({ playerScore, megaCorpControl, stealthLevel }) => ({
 			playerScore,
 			megaCorpControl,

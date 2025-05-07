@@ -83,11 +83,16 @@ export default function LegendScreen({ onStart, onBack }) {
 							create gardens. 🌱
 						</li>
 						<li>
-							Stay hidden — getting caught by a patrol means
-							instant game over! 🚓
+							Actions cost stealth, especially near MegaCorp
+							buildings. Stay hidden! 🕶️
 						</li>
 						<li>
-							Every garden planted weakens MegaCorp's control. ✊
+							Getting caught by a patrol means instant game over!
+							🚓
+						</li>
+						<li>
+							Every garden planted weakens MegaCorp's control and
+							increase your momentum. ✊
 						</li>
 						<li>
 							Plan your route carefully — buildings and hazards

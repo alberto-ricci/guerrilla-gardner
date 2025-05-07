@@ -14,9 +14,9 @@ import {
 } from "@systems/GameScoreSystem";
 import { checkVictory } from "@systems/WinCondition";
 import { checkDefeat } from "@systems/LoseCondition";
-import { triggerRandomEvent } from "@systems/EventSystem";
 import { getPoliceAlertLevel, isPoliceCaught } from "@systems/PoliceSystem";
 import { useStealthManager } from "@hooks/useStealthManager";
+import useEventManager from "@hooks/useEventManager";
 
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
@@ -30,7 +30,6 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const [victoryReason, setVictoryReason] = useState(null);
 	const [hasPlayerActed, setHasPlayerActed] = useState(false);
 	const [lastClickedCell, setLastClickedCell] = useState(null);
-	const [activeEvent, setActiveEvent] = useState(null);
 	const [isReady, setIsReady] = useState(false);
 
 	const previousSupportRef = useRef(support);
@@ -42,6 +41,11 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		gridSize,
 		stealth,
 		handleVictory
+	);
+
+	const { activeEvent, triggerRandomEvent, closeEvent } = useEventManager(
+		handleVictory,
+		handleDefeat
 	);
 
 	function handleVictory(reason = "Victory!") {
@@ -80,10 +84,26 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		}
 
 		if (clickedCell.type === "event") {
-			const event = triggerRandomEvent(clickedCell.randomEventCategory);
-			setActiveEvent(event);
 			plantAtCell(clickedCell.id);
-			applyStealthHit("event");
+
+			triggerRandomEvent(
+				{
+					playerScore: countGardens(grid),
+					megaCorpControl: support,
+					stealthLevel: stealth,
+				},
+				({
+					playerScore,
+					megaCorpControl,
+					stealthLevel: newStealth,
+				}) => {
+					setSupport(megaCorpControl);
+					const stealthChange = stealth - newStealth;
+					applyStealthHit(null, stealthChange);
+				},
+				"abandoned"
+			);
+
 			movePolice();
 			setHasPlayerActed(true);
 			return;
@@ -139,12 +159,10 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		setSupport(1);
 		setPreviousSupport(1);
 		previousSupportRef.current = 1;
-		setActiveEvent(null);
 		setIsReady(false);
 
 		resetStealth(); // Resets to 100
 
-		// Wait a frame so stealth is updated before grid uses it
 		requestAnimationFrame(() => {
 			generateFullGrid(100);
 		});
@@ -188,7 +206,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 
 			<EventManager
 				activeEvent={activeEvent}
-				onClose={() => setActiveEvent(null)}
+				onClose={closeEvent}
 			/>
 
 			{isReady && !isVictory && !isDefeat && (
