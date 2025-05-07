@@ -74,9 +74,6 @@ export default function useEventManager(onVictory, onDefeat) {
 
 		setStateCallbacks(newState);
 
-		if (newState.megaCorpControl === 0) {
-			onVictory();
-		}
 		if (newState.stealthLevel <= 0) {
 			onDefeat("megacorp");
 		}

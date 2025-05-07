@@ -6,6 +6,7 @@ import GardenCell from "./GardenCell";
 import PoliceCell from "./PoliceCell";
 import EmptyCell from "./EmptyCell";
 import BuildingCell from "./BuildingCell";
+import ProtestCell from "./ProtestCell";
 
 /**
  * Renders the correct cell component for the grid based on `cell.type`
@@ -14,6 +15,15 @@ import BuildingCell from "./BuildingCell";
  * @param {boolean} shouldReveal - Optional flag to reveal police (or other hidden content)
  */
 export default function CityCell({ cell, onClick, shouldReveal }) {
+	if (!cell || typeof cell !== "object" || !cell.type) {
+		console.warn("⚠️ Invalid cell in CityCell:", cell);
+		return (
+			<div className="aspect-square flex items-center justify-center bg-red-400 text-white rounded-lg border border-black text-xl font-bold">
+				🚫
+			</div>
+		);
+	}
+
 	switch (cell.type) {
 		case "event":
 			return <EventCell onClick={() => onClick(cell)} />;
@@ -31,6 +41,9 @@ export default function CityCell({ cell, onClick, shouldReveal }) {
 
 		case "building":
 			return <BuildingCell />;
+
+		case "protest":
+			return <ProtestCell />;
 
 		case "empty":
 		default:

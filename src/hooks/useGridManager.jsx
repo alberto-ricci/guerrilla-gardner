@@ -10,7 +10,20 @@ export default function useGridManager(
 	const [grid, setGrid] = useState([]);
 	const [policePositions, setPolicePositions] = useState([]);
 
-	// 🛠 Generate a new grid with random events
+	useEffect(() => {
+		generateFullGrid();
+	}, []);
+
+	useEffect(() => {
+		const totalCells = gridSize * gridSize;
+		const plantedGardens = grid.filter(
+			(cell) => cell.terrain === "garden"
+		).length;
+		if (plantedGardens === totalCells) {
+			onVictory();
+		}
+	}, [grid]);
+
 	const generateFullGrid = (stealthLevel = 100) => {
 		let newGrid = Array.from({ length: gridSize * gridSize }, (_, i) => ({
 			id: i,
@@ -25,55 +38,43 @@ export default function useGridManager(
 		newGrid = seedRandomEvents(newGrid);
 		newGrid = assignStealthHits(newGrid);
 
-		// Store and spawn police based on provided stealth
 		setGrid(newGrid);
 		spawnPolice(newGrid, stealthLevel);
+	};
+
+	const seedBuildings = (gridState) => {
+		const chancePerCell = 0.07;
+		return gridState.map((cell) =>
+			Math.random() < chancePerCell
+				? { ...cell, type: "building", terrain: "building", unit: null }
+				: cell
+		);
 	};
 
 	const seedRandomEvents = (gridState) => {
 		const chancePerCell = 0.08;
 		const eventTypes = ["good", "bad", "neutral"];
 
-		return gridState.map((cell) => {
-			if (Math.random() < chancePerCell) {
-				const randomEvent =
-					eventTypes[Math.floor(Math.random() * eventTypes.length)];
-				return {
-					...cell,
-					type: "event",
-					randomEventCategory: randomEvent,
-				};
-			}
-			return cell;
-		});
-	};
-
-	const seedBuildings = (gridState) => {
-		const chancePerCell = 0.07;
-
-		return gridState.map((cell) => {
-			if (Math.random() < chancePerCell) {
-				return {
-					...cell,
-					type: "building",
-					terrain: "building",
-					unit: null,
-				};
-			}
-			return cell;
-		});
+		return gridState.map((cell) =>
+			Math.random() < chancePerCell
+				? {
+						...cell,
+						type: "event",
+						randomEventCategory:
+							eventTypes[
+								Math.floor(Math.random() * eventTypes.length)
+							],
+				  }
+				: cell
+		);
 	};
 
 	const assignStealthHits = (gridState) => {
-		const updatedGrid = [...gridState];
-
-		for (let i = 0; i < updatedGrid.length; i++) {
-			const cell = updatedGrid[i];
-			if (cell.type !== "empty") continue;
+		return gridState.map((cell, i) => {
+			if (cell.type !== "empty") return cell;
 
 			const row = Math.floor(i / gridSize);
 			const col = i % gridSize;
-
 			const directions = [
 				[-1, 0],
 				[1, 0],
@@ -81,12 +82,9 @@ export default function useGridManager(
 				[0, 1],
 			];
 
-			let nearBuilding = false;
-
-			for (let [dx, dy] of directions) {
+			const nearBuilding = directions.some(([dx, dy]) => {
 				const newRow = row + dx;
 				const newCol = col + dy;
-
 				if (
 					newRow >= 0 &&
 					newRow < gridSize &&
@@ -94,30 +92,27 @@ export default function useGridManager(
 					newCol < gridSize
 				) {
 					const neighborId = newRow * gridSize + newCol;
-					const neighbor = gridState[neighborId];
-					if (neighbor?.type === "building") {
-						nearBuilding = true;
-						break;
-					}
+					return gridState[neighborId]?.type === "building";
 				}
-			}
+				return false;
+			});
 
-			updatedGrid[i] = {
-				...cell,
-				stealthHit: nearBuilding ? 10 : 5,
-			};
-		}
-
-		return updatedGrid;
+			return { ...cell, stealthHit: nearBuilding ? 10 : 5 };
+		});
 	};
 
 	const spawnPolice = (gridState, stealthLevel = 100) => {
-		const emptyCells = gridState.filter(
-			(cell) => !cell.isPlanted && !cell.unit && cell.type !== "building"
+		const validSpawnCells = gridState.filter(
+			(cell) =>
+				!cell.isPlanted &&
+				!cell.unit &&
+				cell.type !== "building" &&
+				cell.type !== "event" &&
+				cell.type !== "protest" // Prevent spawning on protest tiles
 		);
-		const count = getPoliceCount(stealthLevel);
 
-		const selected = emptyCells
+		const count = getPoliceCount(stealthLevel);
+		const selected = validSpawnCells
 			.sort(() => Math.random() - 0.5)
 			.slice(0, count);
 
@@ -150,15 +145,13 @@ export default function useGridManager(
 	const movePolice = () => {
 		setGrid((prevGrid) => {
 			let newGrid = [...prevGrid];
-			let newPolicePositions = [];
+			let newPositions = [];
 
 			policePositions.forEach((id) => {
-				const adjacentCells = getAdjacentEmptyCells(newGrid, id);
-				if (adjacentCells.length > 0) {
+				const targets = getValidPoliceMoves(newGrid, id);
+				if (targets.length > 0) {
 					const target =
-						adjacentCells[
-							Math.floor(Math.random() * adjacentCells.length)
-						];
+						targets[Math.floor(Math.random() * targets.length)];
 
 					newGrid = newGrid.map((cell) => {
 						if (cell.id === id) {
@@ -170,18 +163,18 @@ export default function useGridManager(
 						return cell;
 					});
 
-					newPolicePositions.push(target.id);
+					newPositions.push(target.id);
 				} else {
-					newPolicePositions.push(id);
+					newPositions.push(id); // stay in place
 				}
 			});
 
-			setPolicePositions(newPolicePositions);
+			setPolicePositions(newPositions);
 			return newGrid;
 		});
 	};
 
-	const getAdjacentEmptyCells = (grid, id) => {
+	const getValidPoliceMoves = (grid, id) => {
 		const row = Math.floor(id / gridSize);
 		const col = id % gridSize;
 		const directions = [
@@ -201,37 +194,24 @@ export default function useGridManager(
 					newCol >= 0 &&
 					newCol < gridSize
 				) {
-					const newIndex = newRow * gridSize + newCol;
-					return grid[newIndex];
+					return grid[newRow * gridSize + newCol];
 				}
 				return null;
 			})
-			.filter(
-				(cell) =>
-					cell &&
-					!cell.isPlanted &&
-					!cell.unit &&
-					cell.type !== "building"
-			);
+			.filter((cell) => cell && !isBlockedForPolice(cell));
 	};
 
-	useEffect(() => {
-		const totalCells = gridSize * gridSize;
-		const plantedGardens = grid.filter(
-			(cell) => cell.terrain === "garden"
-		).length;
-
-		if (plantedGardens === totalCells) {
-			onVictory();
-		}
-	}, [grid]);
-
-	useEffect(() => {
-		generateFullGrid();
-	}, []);
+	const isBlockedForPolice = (cell) =>
+		cell.isPlanted ||
+		cell.unit ||
+		cell.type === "building" ||
+		cell.type === "event" ||
+		cell.type === "protest" ||
+		cell.policeBlocked;
 
 	return {
 		grid,
+		setGrid,
 		plantAtCell,
 		movePolice,
 		generateFullGrid,

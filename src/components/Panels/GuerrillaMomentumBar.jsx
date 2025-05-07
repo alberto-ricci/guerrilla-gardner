@@ -1,13 +1,20 @@
-export default function GuerrillaMomentumBar({ value }) {
+// components/ui/GuerrillaMomentumBar.jsx
+import React from "react";
+import ProgressBar from "./ProgressBar";
+
+const GuerrillaMomentumBar = ({ value }) => {
+	const MAX_MOMENTUM = 15;
+	const percent = Math.min((value / MAX_MOMENTUM) * 100, 100).toFixed(0);
+
+	const protestPurple = "#7e22ce";
+
 	return (
-		<div>
-			<h3 className="text-lg font-semibold text-black">⚡ Momentum</h3>
-			<div className="h-3 w-full bg-gray-300 rounded-full overflow-hidden">
-				<div
-					className="h-full bg-green-600 transition-all duration-500"
-					style={{ width: `${value}%` }}
-				></div>
-			</div>
-		</div>
+		<ProgressBar
+			value={percent}
+			color={protestPurple}
+			label={`🔥 Momentum `}
+		/>
 	);
-}
+};
+
+export default GuerrillaMomentumBar;

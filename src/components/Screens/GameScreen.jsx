@@ -14,9 +14,10 @@ import {
 } from "@systems/GameScoreSystem";
 import { checkVictory } from "@systems/WinCondition";
 import { checkDefeat } from "@systems/LoseCondition";
-import { triggerRandomEvent } from "@systems/EventSystem";
 import { getPoliceAlertLevel, isPoliceCaught } from "@systems/PoliceSystem";
 import { useStealthManager } from "@hooks/useStealthManager";
+import useEventManager from "@hooks/useEventManager";
+import useMomentumManager from "@hooks/useMomentumManager";
 
 export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const gridSize = 10;
@@ -25,12 +26,10 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const [isDefeat, setIsDefeat] = useState(false);
 	const [support, setSupport] = useState(1);
 	const [previousSupport, setPreviousSupport] = useState(1);
-
 	const [defeatCause, setDefeatCause] = useState(null);
 	const [victoryReason, setVictoryReason] = useState(null);
 	const [hasPlayerActed, setHasPlayerActed] = useState(false);
 	const [lastClickedCell, setLastClickedCell] = useState(null);
-	const [activeEvent, setActiveEvent] = useState(null);
 	const [isReady, setIsReady] = useState(false);
 
 	const previousSupportRef = useRef(support);
@@ -38,10 +37,20 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 	const { stealth, surveillance, applyStealthHit, resetStealth } =
 		useStealthManager();
 
-	const { grid, plantAtCell, movePolice, generateFullGrid } = useGridManager(
-		gridSize,
-		stealth,
-		handleVictory
+	const {
+		grid,
+		setGrid, // Make sure this is exposed from useGridManager
+		plantAtCell,
+		movePolice,
+		generateFullGrid,
+	} = useGridManager(gridSize, stealth, handleVictory);
+
+	const { momentum, protestCount, handleGardenPlanted, resetMomentum } =
+		useMomentumManager(grid, setGrid);
+
+	const { activeEvent, triggerRandomEvent, closeEvent } = useEventManager(
+		handleVictory,
+		handleDefeat
 	);
 
 	function handleVictory(reason = "Victory!") {
@@ -64,7 +73,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			megaCorpControl: countMegaCorpCells(grid),
 			supportValue: support,
 			stealthLevel: stealth,
-			protests: 0,
+			protests: protestCount,
 			lastClickedCell: clickedCell,
 		};
 
@@ -80,27 +89,52 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		}
 
 		if (clickedCell.type === "event") {
-			const event = triggerRandomEvent(clickedCell.randomEventCategory);
-			setActiveEvent(event);
 			plantAtCell(clickedCell.id);
-			applyStealthHit("event");
+			handleGardenPlanted();
+
+			triggerRandomEvent(
+				{
+					playerScore: countGardens(grid),
+					megaCorpControl: support,
+					stealthLevel: stealth,
+				},
+				({
+					playerScore,
+					megaCorpControl,
+					stealthLevel: newStealth,
+				}) => {
+					setSupport(megaCorpControl);
+					const stealthChange = stealth - newStealth;
+					applyStealthHit(null, stealthChange);
+				},
+				"abandoned"
+			);
+
 			movePolice();
 			setHasPlayerActed(true);
 			return;
 		}
 
-		if (clickedCell.type === "empty") {
-			const alertLevel = getPoliceAlertLevel(
-				grid,
-				clickedCell.id,
-				gridSize
-			);
+		if (clickedCell.type === "empty" || clickedCell.type === "protest") {
+			const alertLevel =
+				clickedCell.type === "protest"
+					? 0
+					: getPoliceAlertLevel(grid, clickedCell.id, gridSize);
+
 			if (isPoliceCaught(alertLevel)) {
 				handleDefeat("Captured by Surveillance 🚨");
 				return;
 			}
+
 			plantAtCell(clickedCell.id);
-			applyStealthHit(null, clickedCell.stealthHit);
+			handleGardenPlanted();
+
+			if (clickedCell.type === "protest" || clickedCell.protestSupport) {
+				applyStealthHit(null, 0);
+			} else {
+				applyStealthHit(null, clickedCell.stealthHit);
+			}
+
 			movePolice();
 			setHasPlayerActed(true);
 		}
@@ -112,7 +146,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 			megaCorpControl: countMegaCorpCells(grid),
 			supportValue: currentSupport,
 			stealthLevel: stealth,
-			protests: 0,
+			protests: protestCount,
 		};
 
 		const victory = checkVictory(gameState);
@@ -139,17 +173,14 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 		setSupport(1);
 		setPreviousSupport(1);
 		previousSupportRef.current = 1;
-		setActiveEvent(null);
 		setIsReady(false);
 
-		resetStealth(); // Resets to 100
+		resetStealth();
+		resetMomentum();
 
-		// Wait a frame so stealth is updated before grid uses it
 		requestAnimationFrame(() => {
 			generateFullGrid(100);
 		});
-
-		console.log("stealth before generating grid:", stealth);
 	}
 
 	useEffect(() => {
@@ -188,7 +219,7 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 
 			<EventManager
 				activeEvent={activeEvent}
-				onClose={() => setActiveEvent(null)}
+				onClose={closeEvent}
 			/>
 
 			{isReady && !isVictory && !isDefeat && (
@@ -202,11 +233,9 @@ export default function GameScreen({ onRestartGame, onBackToMenu }) {
 						surveillanceLevel={surveillance}
 						policeCount={countPoliceUnits(grid)}
 						isFrozen={isVictory || isDefeat}
-						momentum={0}
-						resources={0}
-						droneActivity={0}
-						securityLevel={0}
-						protests={0}
+						momentum={momentum}
+						protests={protestCount}
+						momentumLevel={momentum}
 						megaCorpCells={countMegaCorpCells(grid)}
 						supportChange={supportChange}
 					/>

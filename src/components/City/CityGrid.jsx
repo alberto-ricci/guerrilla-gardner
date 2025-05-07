@@ -15,9 +15,20 @@ export default function CityGrid({ grid, onCellClick }) {
 
 	return (
 		<div className="grid grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-1 w-full max-w-2xl p-2">
-			{grid.map((cell) => {
-				const { unit, revealed } = cell;
+			{grid.map((cell, index) => {
+				if (!cell || typeof cell !== "object" || !("type" in cell)) {
+					console.warn("⚠️ Skipping invalid cell in grid:", cell);
+					return (
+						<div
+							key={`invalid-${index}`}
+							className="aspect-square bg-red-300 text-white text-xl flex items-center justify-center rounded-lg border border-black"
+						>
+							❌
+						</div>
+					);
+				}
 
+				const { unit, revealed } = cell;
 				const shouldReveal =
 					revealed ||
 					(DEBUG_ALWAYS_REVEAL_POLICE && unit === "police");

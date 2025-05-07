@@ -10,3 +10,4 @@ export { default as EmptyCell } from "./EmptyCell";
 export { default as EventCell } from "./EventCell";
 export { default as GardenCell } from "./GardenCell";
 export { default as PoliceCell } from "./PoliceCell";
+export { default as ProtestCell } from "./ProtestCell";
